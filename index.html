@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>给熊印的小抱抱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #faf5ff;
+      --card: #ffffff;
+      --text-main: #1f2933;
+      --text-soft: #6b7280;
+      --accent: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      background: radial-gradient(circle at top, #e9d5ff, #f9fafb 45%, #f3e8ff 80%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      color: var(--text-main);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+      padding: 20px 18px 24px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f3e8ff;
+      color: #7c3aed;
+      white-space: nowrap;
+    }
+
+    .photo-wrapper {
+      margin-top: 12px;
+      margin-bottom: 12px;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: #f3f4f6;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .photo {
+      width: 100%;
+      display: block;
+      max-height: 320px;
+      object-fit: cover;
+    }
+
+    .photo-overlay {
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+      background: rgba(17, 24, 39, 0.7);
+      color: white;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 15px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-soft);
+      text-align: center;
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .btn-main {
+      padding: 9px 20px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .btn-main:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 10px rgba(168, 85, 247, 0.25);
+    }
+
+    .btn-sub {
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .footer {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .heart {
+      display: inline-block;
+      transform-origin: center;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: radial-gradient(circle at top, #1e293b, #020617 50%, #0b1020 90%);
+      }
+      .app {
+        background: #020617;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+      }
+      .subtitle, .hint, .footer, .btn-sub {
+        color: #9ca3af;
+      }
+      .btn-sub {
+        border-color: rgba(148, 163, 184, 0.7);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="title-group">
+        <div class="title">给熊印的小抱抱 🐻</div>
+        <div class="subtitle">随时点一下，召唤胖兔出现 🐰</div>
+      </div>
+      <div class="tag">只属于你</div>
+    </header>
+
+    <main>
+      <div class="photo-wrapper">
+        <!-- 默认加载第一张，后面用 JS 换 -->
+        <img id="photo" class="photo" src="images/photo1.jpg" alt="hug photo" />
+        <div class="photo-overlay" id="photoLabel">胖兔在这儿</div>
+      </div>
+
+      <div class="message" id="message">
+        今天辛苦啦，先不用很坚强，可以在我这里当一只小熊。
+      </div>
+
+      <div class="hint">
+        点下面这个按钮，随机换一张照片和一句话 💌
+      </div>
+
+      <div class="actions">
+        <button class="btn-main" onclick="nextHug()">
+          <span>再抱我一下</span>
+          <span>🤍</span>
+        </button>
+        <button class="btn-sub" onclick="softMode()">
+          有点累…
+        </button>
+      </div>
+
+      <div class="footer">
+        <span class="heart">♥</span>  Made by 胖兔，只给熊印看
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 👉 你可以在这里改照片文件名（放在 /images 里）
+    const photos = [
+      { src: "images/photo1.jpg", label: "今天的胖🐰" },
+      { src: "images/photo2.jpg", label: "认真工作的胖🐰" },
+      { src: "images/photo3.jpg", label: "发呆中的胖🐰" }
+    ];
+
+    // 👉 你可以在这里改你想说的话
+    const messages = [
+      "今天辛苦啦，先不用很坚强，可以在我这里当一只小🐻。",
+      "就算全世界都很吵，你在我这里可以不说话，只需要被抱着就好。",
+      "我知道很多时候你觉得自己一个人扛着，但其实我一直在你这边。",
+      "哪怕你什么都不做，你本身就已经够好了，是被需要、被爱着的。",
+      "有些路确实很难走，但你不是一个人慢慢走，是我们一起走。"
+    ];
+
+    const softMessages = [
+      "今天如果觉得有点撑不住，就先放过今天吧，其他以后再说。",
+      "不一定要变成“高能量老鼠人”，你可以做一只慢悠悠的小🐻。",
+      "你可以不那么完美，但你永远是我会选择站在一起的那个人。"
+    ];
+
+    let lastIndex = -1;
+
+    function randomIndex(length) {
+      if (length <= 1) return 0;
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * length);
+      } while (idx === lastIndex);
+      lastIndex = idx;
+      return idx;
+    }
+
+    function nextHug() {
+      const iPhoto = randomIndex(photos.length);
+      const iMsg = randomIndex(messages.length);
+
+      const p = photos[iPhoto];
+      document.getElementById("photo").src = p.src;
+      document.getElementById("photoLabel").textContent = p.label;
+      document.getElementById("message").textContent = messages[iMsg];
+    }
+
+    function softMode() {
+      const iPhoto = randomIndex(photos.length);
+      const iMsg = randomIndex(softMessages.length);
+
+      const p = photos[iPhoto];
+      document.getElementById("photo").src = p.src;
+      document.getElementById("photoLabel").textContent = p.label;
+      document.getElementById("message").textContent = softMessages[iMsg];
+    }
+  </script>
+</body>
+</html>
