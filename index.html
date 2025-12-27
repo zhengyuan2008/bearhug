@@ -2,290 +2,173 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>给熊印的小抱抱</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #faf5ff;
-      --card: #ffffff;
-      --text-main: #1f2933;
-      --text-soft: #6b7280;
-      --accent: #a855f7;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-      background: radial-gradient(circle at top, #e9d5ff, #f9fafb 45%, #f3e8ff 80%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      color: var(--text-main);
-    }
-
-    .app {
-      width: 100%;
-      max-width: 420px;
-      background: var(--card);
-      border-radius: 24px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-      padding: 20px 18px 24px;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .title-group {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .title {
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .subtitle {
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    .tag {
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #f3e8ff;
-      color: #7c3aed;
-      white-space: nowrap;
-    }
-
-    .photo-wrapper {
-      margin-top: 12px;
-      margin-bottom: 12px;
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-      background: #f3f4f6;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-    }
-
-    .photo {
-      width: 100%;
-      display: block;
-      max-height: 320px;
-      object-fit: cover;
-    }
-
-    .photo-overlay {
-      position: absolute;
-      bottom: 10px;
-      right: 12px;
-      background: rgba(17, 24, 39, 0.7);
-      color: white;
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 999px;
-    }
-
-    .message {
-      margin-top: 10px;
-      font-size: 15px;
-      line-height: 1.5;
-      text-align: center;
-    }
-
-    .hint {
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--text-soft);
-      text-align: center;
-    }
-
-    .actions {
-      margin-top: 18px;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    button {
-      border: none;
-      outline: none;
-      cursor: pointer;
-      font: inherit;
-    }
-
-    .btn-main {
-      padding: 9px 20px;
-      border-radius: 999px;
-      background: var(--accent);
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.35);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: transform 0.08s ease, box-shadow 0.08s ease;
-    }
-
-    .btn-main:active {
-      transform: translateY(1px) scale(0.98);
-      box-shadow: 0 4px 10px rgba(168, 85, 247, 0.25);
-    }
-
-    .btn-sub {
-      padding: 9px 14px;
-      border-radius: 999px;
-      background: transparent;
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      font-size: 13px;
-      color: var(--text-soft);
-    }
-
-    .footer {
-      margin-top: 14px;
-      text-align: center;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .heart {
-      display: inline-block;
-      transform-origin: center;
-      animation: pulse 1.6s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-    }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: radial-gradient(circle at top, #1e293b, #020617 50%, #0b1020 90%);
-      }
-      .app {
-        background: #020617;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
-        border: 1px solid rgba(148, 163, 184, 0.4);
-      }
-      .subtitle, .hint, .footer, .btn-sub {
-        color: #9ca3af;
-      }
-      .btn-sub {
-        border-color: rgba(148, 163, 184, 0.7);
-      }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="给熊印的温柔小空间" />
+  <title>给熊印的小空间 🐻</title>
+  
+  <!-- 预加载关键资源 -->
+  <link rel="preload" href="css/styles.css" as="style" />
+  <link rel="preload" href="js/config.js" as="script" />
+  <link rel="preload" href="js/main.js" as="script" />
+  
+  <!-- 样式表 -->
+  <link rel="stylesheet" href="css/styles.css?v=2" />
+  
+  <!-- iOS Safari 优化 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="format-detection" content="telephone=no" />
 </head>
 <body>
-  <div class="app">
+  
+  <!-- 主容器 -->
+  <div class="glass-card">
+    
+    <!-- 头部 -->
     <header class="header">
-      <div class="title-group">
-        <div class="title">给熊印的小抱抱 🐻</div>
-        <div class="subtitle">随时点一下，召唤胖兔出现 🐰</div>
-      </div>
-      <div class="tag">只属于你</div>
+      <h1 class="title" id="app-title">给熊印的小空间 🐻</h1>
+      <p class="subtitle" id="app-subtitle">今天来这儿一下就好，不用表现</p>
     </header>
-
+    
+    <!-- Tab导航 -->
+    <nav class="tab-navigation">
+      <button class="tab-button active" data-tab="lounge" id="tab-lounge">
+        <span>🛋️</span>
+        <span>休息室</span>
+      </button>
+      <button class="tab-button" data-tab="period" id="tab-period">
+        <span>🌸</span>
+        <span>姨妈助手</span>
+      </button>
+    </nav>
+    
+    <!-- 主内容区 -->
     <main>
-      <div class="photo-wrapper">
-        <!-- 默认加载第一张，后面用 JS 换 -->
-        <img id="photo" class="photo" src="images/photo1.png" alt="hug photo" />
-        <div class="photo-overlay" id="photoLabel">胖兔在这儿</div>
-      </div>
-
-      <div class="message" id="message">
-        今天辛苦啦，先不用很坚强，可以在我这里当一只小熊。
-      </div>
-
-      <div class="hint">
-        点下面这个按钮，随机换一张照片和一句话 💌
-      </div>
-
-      <div class="actions">
-        <button class="btn-main" onclick="nextHug()">
+      
+      <!-- 休息室Tab内容 -->
+      <div class="tab-content active" id="content-lounge">
+      
+      <!-- 照片区域 -->
+      <section class="photo-section">
+        <div class="photo-wrapper">
+          <img
+            id="hug-photo"
+            class="hug-photo"
+            src="images/工作🐰.png"
+            alt="温暖的照片"
+            loading="lazy"
+          />
+          <div class="photo-label" id="photo-label">今天的胖🐰</div>
+        </div>
+      </section>
+      
+      <!-- 消息区域 -->
+      <section class="message-section">
+        <p class="main-message" id="main-message">
+          今天辛苦啦，先不用很坚强，可以在我这里当一只小🐻。
+        </p>
+        <p class="message-hint">点下面的按钮，随时召唤胖兔 💌</p>
+      </section>
+      
+      <!-- 情绪按钮 -->
+      <section class="emotion-section">
+        <div class="emotion-buttons" id="emotion-buttons">
+          <!-- 由 JavaScript 动态生成 -->
+        </div>
+      </section>
+      
+      <!-- 主要操作按钮 -->
+      <section class="action-buttons">
+        <button class="btn-main" id="btn-hug">
           <span>再抱我一下</span>
           <span>🤍</span>
         </button>
-        <button class="btn-sub" onclick="softMode()">
-          有点累…
+      </section>
+      
+      <!-- "我又活过了一天" 签到区域 -->
+      <section class="survival-section" style="display: none;">
+        <h2 class="section-title">「我又活过了一天」</h2>
+        <p class="section-description">
+          如果你愿意，可以点一下，告诉自己：今天也走过来了。
+        </p>
+        <button class="btn-survival" id="btn-survival">
+          今天很不容易，但我过来了
         </button>
+        <p class="survival-stats" id="survival-stats">
+          最近 7 天，你为自己按下了 0 次这个按钮
+        </p>
+      </section>
+      
       </div>
-
-      <div class="footer">
-        <span class="heart">♥</span>  Made by 胖兔，只给熊印看
+      <!-- 休息室Tab内容结束 -->
+      
+      <!-- 姨妈助手Tab内容 -->
+      <div class="tab-content" id="content-period">
+        
+        <section class="glass-mini-card period-section">
+          <h2 class="section-title">🌸 姨妈记录</h2>
+          <p class="section-description">
+            如果你愿意，我们可以在这儿帮你记一下大概的时间。只是为了让你身体被看见一点。
+          </p>
+          
+          <!-- 日期显示 -->
+          <div class="period-date-display" id="period-date-display">
+            <div class="period-date-item">
+              <div class="period-date-label">今天</div>
+              <div class="period-date-value" id="today-date">--</div>
+            </div>
+            <div class="period-date-item">
+              <div class="period-date-label">上次</div>
+              <div class="period-date-value" id="last-period-date">--</div>
+            </div>
+          </div>
+          
+          <div class="period-info" id="period-info">
+            <p>如果哪天你想记，可以点下面的按钮。不记也完全没关系。</p>
+          </div>
+          
+          <button class="btn-period" id="btn-period">
+            今天是第一天
+          </button>
+          
+          <!-- 照护小贴士 -->
+          <div class="period-care-tips" id="period-care-tips" style="display: none;">
+            <div class="period-care-tips-title">
+              <span>💝</span>
+              <span>温柔照护小提示</span>
+            </div>
+            <ul class="period-care-tips-list">
+              <li>可以喝点温水，对身体温柔一点</li>
+              <li>如果不舒服，躺着休息完全可以</li>
+              <li>今天不用逼自己做太多事</li>
+            </ul>
+          </div>
+        </section>
+        
       </div>
+      <!-- 姨妈助手Tab内容结束 -->
+      
     </main>
+    
+    <!-- 页脚 -->
+    <footer class="footer">
+      <span class="heart">♥</span> Made by 胖兔，只给🐻看
+    </footer>
+    
   </div>
-
+  
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast"></div>
+  
+  <!-- JavaScript -->
+  <script src="js/config.js?v=2"></script>
+  <script src="js/main.js?v=2"></script>
   <script>
-    // 👉 你可以在这里改照片文件名（放在 /images 里）
-    const photos = [
-      { src: "images/photo1.png", label: "今天的胖🐰" },
-      { src: "images/photo2.png", label: "认真工作的胖🐰" },
-      { src: "images/photo3.png", label: "发呆中的胖🐰" }
-    ];
-
-    // 👉 你可以在这里改你想说的话
-    const messages = [
-      "今天辛苦啦，先不用很坚强，可以在我这里当一只小🐻。",
-      "就算全世界都很吵，你在我这里可以不说话，只需要被抱着就好。",
-      "我知道很多时候你觉得自己一个人扛着，但其实我一直在你这边。",
-      "哪怕你什么都不做，你本身就已经够好了，是被需要、被爱着的。",
-      "有些路确实很难走，但你不是一个人慢慢走，是我们一起走。"
-    ];
-
-    const softMessages = [
-      "今天如果觉得有点撑不住，就先放过今天吧，其他以后再说。",
-      "不一定要变成“高能量老鼠人”，你可以做一只慢悠悠的小🐻。",
-      "你可以不那么完美，但你永远是我会选择站在一起的那个人。"
-    ];
-
-    let lastIndex = -1;
-
-    function randomIndex(length) {
-      if (length <= 1) return 0;
-      let idx;
-      do {
-        idx = Math.floor(Math.random() * length);
-      } while (idx === lastIndex);
-      lastIndex = idx;
-      return idx;
-    }
-
-    function nextHug() {
-      const iPhoto = randomIndex(photos.length);
-      const iMsg = randomIndex(messages.length);
-
-      const p = photos[iPhoto];
-      document.getElementById("photo").src = p.src;
-      document.getElementById("photoLabel").textContent = p.label;
-      document.getElementById("message").textContent = messages[iMsg];
-    }
-
-    function softMode() {
-      const iPhoto = randomIndex(photos.length);
-      const iMsg = randomIndex(softMessages.length);
-
-      const p = photos[iPhoto];
-      document.getElementById("photo").src = p.src;
-      document.getElementById("photoLabel").textContent = p.label;
-      document.getElementById("message").textContent = softMessages[iMsg];
-    }
+    // 立即测试
+    console.log('=== JavaScript已加载 ===');
+    console.log('CONFIG对象存在:', typeof CONFIG !== 'undefined');
+    console.log('当前时间:', new Date().toISOString());
   </script>
+  
 </body>
 </html>

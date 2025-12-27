@@ -1,0 +1,14 @@
+# 原始图片文件夹（已压缩版本在images/）
+image_library_raw/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+
+# 测试文件
+test-*.html
