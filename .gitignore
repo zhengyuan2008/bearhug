@@ -1,6 +1,11 @@
 # 原始图片文件夹（已压缩版本在images/）
 image_library_raw/
 
+# 环境变量和密钥
+.env
+.env.local
+.env.production
+
 # macOS
 .DS_Store
 .AppleDouble
@@ -12,3 +17,7 @@ image_library_raw/
 
 # 测试文件
 test-*.html
+
+# 日志文件
+*.log
+npm-debug.log*
