@@ -186,7 +186,10 @@ function handleEmotionClick(emotionType) {
  */
 function logEmotion(emotionType) {
   try {
-    // 本地存储
+    // 保存到云端（Supabase）
+    saveEmotionLog(emotionType);
+
+    // 同时保存到本地作为备份
     const log = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMOTION_LOG) || '[]');
     log.push({
       type: emotionType,
@@ -458,7 +461,12 @@ function switchTab(tabName) {
   if (tabName === 'period') {
     updatePeriodInfo();
   }
-  
+
+  // 如果切换到美食抉择，初始化
+  if (tabName === 'food') {
+    initFoodTab();
+  }
+
   console.log('=== Tab切换完成 ===');
 }
 
@@ -588,6 +596,41 @@ function bindEvents() {
   if (closeHistoryButton) {
     closeHistoryButton.onclick = closeHistoryToday;
     console.log('✓ 绑定了关闭历史按钮');
+  }
+
+  // 随机全餐按钮
+  const randomAllButton = document.getElementById('btn-random-all');
+  if (randomAllButton) {
+    randomAllButton.onclick = () => checkLockAndRandomize('all');
+    console.log('✓ 绑定了随机全餐按钮');
+  }
+
+  // 随机选吃的按钮
+  const randomFoodButton = document.getElementById('btn-random-food');
+  if (randomFoodButton) {
+    randomFoodButton.onclick = () => checkLockAndRandomize('food');
+    console.log('✓ 绑定了选个吃的按钮');
+  }
+
+  // 随机选喝的按钮
+  const randomDrinkButton = document.getElementById('btn-random-drink');
+  if (randomDrinkButton) {
+    randomDrinkButton.onclick = () => checkLockAndRandomize('drink');
+    console.log('✓ 绑定了选个喝的按钮');
+  }
+
+  // 确认选择按钮
+  const confirmButton = document.getElementById('btn-confirm-choice');
+  if (confirmButton) {
+    confirmButton.onclick = confirmFoodChoice;
+    console.log('✓ 绑定了确认选择按钮');
+  }
+
+  // 解锁按钮
+  const unlockButton = document.getElementById('btn-unlock');
+  if (unlockButton) {
+    unlockButton.onclick = requestUnlock;
+    console.log('✓ 绑定了解锁按钮');
   }
 
   console.log('事件绑定完成！');
@@ -986,6 +1029,461 @@ async function preloadHistoryStory() {
 
   // 静默失败，不阻塞页面初始化
   await currentLoadingPromise.catch(() => {});
+}
+
+// ========================================
+// 美食抉择功能
+// ========================================
+
+let foodOptions = { foods: [], drinks: [] };
+let todayChoice = null;
+let isChoiceLocked = false;
+let tempChoice = null; // 临时选择，未确认前不保存数据库
+
+/**
+ * 初始化美食抉择Tab
+ */
+async function initFoodTab() {
+  // 更新日期显示
+  updateFoodDate();
+
+  // 加载美食选项
+  await loadFoodOptions();
+
+  // 检查今日选择状态
+  await checkTodayChoice();
+}
+
+/**
+ * 更新日期显示
+ */
+function updateFoodDate() {
+  const dateElement = document.getElementById('food-date');
+  if (!dateElement) return;
+
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
+  dateElement.textContent = `${month}月${day}日`;
+}
+
+/**
+ * 加载美食选项
+ */
+async function loadFoodOptions() {
+  try {
+    // 从数据库加载美食选项
+    foodOptions = await getFoodOptions();
+    console.log('✓ 加载美食选项:', foodOptions.foods.length, '种食物,', foodOptions.drinks.length, '种饮品');
+  } catch (error) {
+    console.error('加载美食数据失败:', error);
+    showToast('加载美食选项失败，请刷新重试');
+  }
+}
+
+/**
+ * 检查今日选择状态
+ */
+async function checkTodayChoice() {
+  try {
+    // 从数据库加载今日选择
+    todayChoice = await getTodayFoodChoice();
+
+    const resultDiv = document.getElementById('food-choice-result');
+    const buttonsDiv = document.getElementById('food-choice-buttons');
+    const confirmSection = document.getElementById('food-confirm-section');
+    const lockedSection = document.getElementById('food-locked-section');
+
+    if (todayChoice && todayChoice.is_locked) {
+      // 已锁定状态
+      isChoiceLocked = true;
+      displayFoodChoice(todayChoice.food_name, todayChoice.drink_name);
+      if (resultDiv) resultDiv.style.display = 'block';
+      if (buttonsDiv) buttonsDiv.style.display = 'none';
+      if (confirmSection) confirmSection.style.display = 'none';
+      if (lockedSection) lockedSection.style.display = 'block';
+    } else if (todayChoice) {
+      // 已选择但未锁定
+      isChoiceLocked = false;
+      displayFoodChoice(todayChoice.food_name, todayChoice.drink_name);
+      if (resultDiv) resultDiv.style.display = 'block';
+      if (buttonsDiv) buttonsDiv.style.display = 'flex';
+      if (confirmSection) confirmSection.style.display = 'block';
+      if (lockedSection) lockedSection.style.display = 'none';
+    } else {
+      // 还没有选择
+      isChoiceLocked = false;
+      if (resultDiv) resultDiv.style.display = 'none';
+      if (buttonsDiv) buttonsDiv.style.display = 'flex';
+      if (confirmSection) confirmSection.style.display = 'none';
+      if (lockedSection) lockedSection.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('检查今日选择失败:', error);
+  }
+}
+
+/**
+ * 检查锁定状态并随机选择
+ */
+async function checkLockAndRandomize(type) {
+  if (isChoiceLocked) {
+    // 如果已锁定，询问是否重新来过
+    const confirmed = confirm('今日选择已确认，确定要重新来过吗？\n重新选择后需要再次确认才能锁定。');
+    if (!confirmed) {
+      return;
+    }
+
+    // 删除数据库中的记录
+    const client = getSupabase();
+    if (client && todayChoice && todayChoice.id) {
+      const { error } = await client
+        .from('food_choices')
+        .delete()
+        .eq('id', todayChoice.id);
+
+      if (error) {
+        console.error('删除记录失败:', error);
+        showToast('解锁失败，请重试');
+        return;
+      }
+    }
+
+    // 解锁
+    isChoiceLocked = false;
+    todayChoice = null;
+    tempChoice = null;
+
+    const lockedSection = document.getElementById('food-locked-section');
+    const buttonsDiv = document.getElementById('food-choice-buttons');
+    if (lockedSection) lockedSection.style.display = 'none';
+    if (buttonsDiv) buttonsDiv.style.display = 'flex';
+  }
+
+  // 执行随机选择
+  if (type === 'all') {
+    await randomFullMeal();
+  } else if (type === 'food') {
+    await randomFood();
+  } else if (type === 'drink') {
+    await randomDrink();
+  }
+}
+
+/**
+ * 确认选择并锁定
+ */
+async function confirmFoodChoice() {
+  if (!tempChoice && !todayChoice) {
+    showToast('请先进行选择');
+    return;
+  }
+
+  console.log('=== 开始确认选择 ===');
+  console.log('tempChoice:', tempChoice);
+  console.log('todayChoice:', todayChoice);
+
+  try {
+    // 使用临时选择或今日选择
+    const choice = tempChoice || todayChoice;
+
+    // 保存到数据库并锁定
+    const newChoice = await saveFoodChoice(choice.food_name, choice.drink_name, true);
+
+    if (!newChoice) {
+      throw new Error('保存失败');
+    }
+
+    console.log('✓ 数据库返回的记录:', newChoice);
+
+    // 更新本地状态
+    isChoiceLocked = true;
+    todayChoice = newChoice;
+    tempChoice = null; // 清空临时选择
+
+    console.log('✓ 已更新 todayChoice:', todayChoice);
+    console.log('✓ todayChoice.id:', todayChoice.id);
+
+    // 更新UI
+    const buttonsDiv = document.getElementById('food-choice-buttons');
+    const confirmSection = document.getElementById('food-confirm-section');
+    const lockedSection = document.getElementById('food-locked-section');
+
+    if (buttonsDiv) buttonsDiv.style.display = 'none';
+    if (confirmSection) confirmSection.style.display = 'none';
+    if (lockedSection) lockedSection.style.display = 'block';
+
+    showToast('✅ 今日选择已确认锁定');
+    console.log('✓ 选择已锁定并保存到数据库');
+
+  } catch (error) {
+    console.error('锁定选择失败:', error);
+    showToast('锁定失败，请重试');
+  }
+}
+
+/**
+ * 请求解锁
+ */
+async function requestUnlock() {
+  const confirmed = confirm('确定要重新来过吗？\n这将取消今日的确认状态，允许重新选择。');
+  if (!confirmed) {
+    return;
+  }
+
+  console.log('=== 开始解锁流程 ===');
+  console.log('todayChoice:', todayChoice);
+
+  try {
+    // 删除数据库中的记录
+    const client = getSupabase();
+    if (!client) {
+      console.error('❌ Supabase client 未初始化');
+      throw new Error('数据库连接失败');
+    }
+
+    if (!todayChoice) {
+      console.warn('⚠️ todayChoice 为空，无需删除数据库记录');
+    } else if (!todayChoice.id) {
+      console.error('❌ todayChoice.id 不存在:', todayChoice);
+      throw new Error('记录ID缺失');
+    } else {
+      console.log('🗑️ 准备删除记录 ID:', todayChoice.id);
+
+      const { data, error } = await client
+        .from('food_choices')
+        .delete()
+        .eq('id', todayChoice.id)
+        .select(); // 返回被删除的记录
+
+      if (error) {
+        console.error('❌ 删除失败:', error);
+        throw error;
+      }
+
+      console.log('✅ 删除成功，被删除的记录:', data);
+    }
+
+    // 更新本地状态
+    isChoiceLocked = false;
+    todayChoice = null;
+    tempChoice = null;
+
+    // 更新UI
+    const resultDiv = document.getElementById('food-choice-result');
+    const buttonsDiv = document.getElementById('food-choice-buttons');
+    const confirmSection = document.getElementById('food-confirm-section');
+    const lockedSection = document.getElementById('food-locked-section');
+
+    if (resultDiv) resultDiv.style.display = 'none';
+    if (buttonsDiv) buttonsDiv.style.display = 'flex';
+    if (confirmSection) confirmSection.style.display = 'none';
+    if (lockedSection) lockedSection.style.display = 'none';
+
+    showToast('🔓 已解锁，可以重新选择');
+    console.log('✓ 解锁完成');
+
+  } catch (error) {
+    console.error('❌ 解锁失败:', error);
+    showToast('解锁失败：' + error.message);
+  }
+}
+
+/**
+ * 随机选择（避免今日重复）
+ */
+function randomPick(items, excludeRecent = []) {
+  if (!items || items.length === 0) return null;
+
+  // 过滤掉最近选过的
+  let available = items.filter(item => !excludeRecent.includes(item.name));
+
+  // 如果全部都选过了，就从全部中选
+  if (available.length === 0) {
+    available = items;
+  }
+
+  const randomIndex = Math.floor(Math.random() * available.length);
+  return available[randomIndex];
+}
+
+/**
+ * 获取最近选择的食物名单（用于避免重复）
+ */
+async function getRecentChoiceNames(days = 7) {
+  const recentChoices = await getRecentFoodChoices(days);
+  const foodNames = recentChoices.map(c => c.food_name).filter(Boolean);
+  const drinkNames = recentChoices.map(c => c.drink_name).filter(Boolean);
+  return { foodNames, drinkNames };
+}
+
+/**
+ * 随机全餐
+ */
+async function randomFullMeal() {
+  // 显示骰子动画
+  showDiceAnimation();
+
+  try {
+    const recent = await getRecentChoiceNames(7);
+
+    const food = randomPick(foodOptions.foods, recent.foodNames);
+    const drink = randomPick(foodOptions.drinks, recent.drinkNames);
+
+    if (!food || !drink) {
+      throw new Error('没有可用的选项');
+    }
+
+    // 等待1秒让动画播放
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // 保存到临时变量，不保存数据库
+    tempChoice = {
+      food_name: food.name,
+      drink_name: drink.name,
+      is_locked: false
+    };
+
+    // 隐藏骰子动画
+    hideDiceAnimation();
+
+    // 显示结果
+    displayFoodChoice(food.name, drink.name);
+
+    // 显示确认按钮
+    const confirmSection = document.getElementById('food-confirm-section');
+    if (confirmSection) confirmSection.style.display = 'block';
+
+  } catch (error) {
+    console.error('随机选择失败:', error);
+    hideDiceAnimation();
+    showToast('选择失败，请稍后重试');
+  }
+}
+
+/**
+ * 只选吃的
+ */
+async function randomFood() {
+  // 显示骰子动画
+  showDiceAnimation();
+
+  try {
+    const recent = await getRecentChoiceNames(7);
+    const food = randomPick(foodOptions.foods, recent.foodNames);
+
+    if (!food) {
+      throw new Error('没有可用的选项');
+    }
+
+    // 等待1秒让动画播放
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // 保留已有的drink，或者为null
+    const drinkName = tempChoice?.drink_name || todayChoice?.drink_name || null;
+
+    // 保存到临时变量，不保存数据库
+    tempChoice = {
+      food_name: food.name,
+      drink_name: drinkName,
+      is_locked: false
+    };
+
+    // 隐藏骰子动画
+    hideDiceAnimation();
+
+    // 显示结果
+    displayFoodChoice(food.name, drinkName);
+
+    // 显示确认按钮
+    const confirmSection = document.getElementById('food-confirm-section');
+    if (confirmSection) confirmSection.style.display = 'block';
+
+  } catch (error) {
+    console.error('随机选择失败:', error);
+    hideDiceAnimation();
+    showToast('选择失败，请稍后重试');
+  }
+}
+
+/**
+ * 只选喝的
+ */
+async function randomDrink() {
+  // 显示骰子动画
+  showDiceAnimation();
+
+  try {
+    const recent = await getRecentChoiceNames(7);
+    const drink = randomPick(foodOptions.drinks, recent.drinkNames);
+
+    if (!drink) {
+      throw new Error('没有可用的选项');
+    }
+
+    // 等待1秒让动画播放
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // 保留已有的food，或者为null
+    const foodName = tempChoice?.food_name || todayChoice?.food_name || null;
+
+    // 保存到临时变量，不保存数据库
+    tempChoice = {
+      food_name: foodName,
+      drink_name: drink.name,
+      is_locked: false
+    };
+
+    // 隐藏骰子动画
+    hideDiceAnimation();
+
+    // 显示结果
+    displayFoodChoice(foodName, drink.name);
+
+    // 显示确认按钮
+    const confirmSection = document.getElementById('food-confirm-section');
+    if (confirmSection) confirmSection.style.display = 'block';
+
+  } catch (error) {
+    console.error('随机选择失败:', error);
+    hideDiceAnimation();
+    showToast('选择失败，请稍后重试');
+  }
+}
+
+/**
+ * 显示骰子动画
+ */
+function showDiceAnimation() {
+  const diceDiv = document.getElementById('dice-animation');
+  const resultDiv = document.getElementById('food-choice-result');
+
+  if (diceDiv) diceDiv.style.display = 'block';
+  if (resultDiv) resultDiv.style.display = 'none';
+}
+
+/**
+ * 隐藏骰子动画
+ */
+function hideDiceAnimation() {
+  const diceDiv = document.getElementById('dice-animation');
+  if (diceDiv) diceDiv.style.display = 'none';
+}
+
+/**
+ * 显示美食选择结果
+ */
+function displayFoodChoice(foodName, drinkName) {
+  const resultDiv = document.getElementById('food-choice-result');
+  const foodSpan = document.getElementById('choice-food');
+  const drinkSpan = document.getElementById('choice-drink');
+
+  if (!resultDiv || !foodSpan || !drinkSpan) return;
+
+  foodSpan.textContent = foodName || '未选择';
+  drinkSpan.textContent = drinkName || '未选择';
+
+  resultDiv.style.display = 'block';
 }
 
 // ========================================

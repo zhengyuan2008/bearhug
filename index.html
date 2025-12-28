@@ -41,6 +41,10 @@
         <span>🌸</span>
         <span>姨妈助手</span>
       </button>
+      <button class="tab-button" data-tab="food" id="tab-food">
+        <span>🍱</span>
+        <span>美食抉择</span>
+      </button>
     </nav>
     
     <!-- 主内容区 -->
@@ -189,10 +193,82 @@
             </ul>
           </div>
         </section>
-        
+
       </div>
       <!-- 姨妈助手Tab内容结束 -->
-      
+
+      <!-- 美食抉择Tab内容 -->
+      <div class="tab-content" id="content-food">
+
+        <section class="glass-mini-card food-choice-section">
+          <h2 class="section-title">🍱 今天吃什么</h2>
+
+          <!-- 日期显示 -->
+          <div class="food-date-display">
+            <span class="food-date-label">📅</span>
+            <span class="food-date-value" id="food-date">--</span>
+          </div>
+
+          <!-- 美食背景图 -->
+          <div class="food-choice-image">
+            <img src="images/Others/food1.jpeg" alt="美食" />
+          </div>
+
+          <!-- 摇骰子动画区域 -->
+          <div class="dice-animation" id="dice-animation" style="display: none;">
+            <div class="dice">🎲</div>
+            <p>正在为你抉择...</p>
+          </div>
+
+          <!-- 今日选择显示 -->
+          <div class="food-choice-result" id="food-choice-result" style="display: none;">
+            <div class="choice-item">
+              <span class="choice-label">🍜 吃的：</span>
+              <span class="choice-value" id="choice-food">--</span>
+            </div>
+            <div class="choice-item">
+              <span class="choice-label">🥤 喝的：</span>
+              <span class="choice-value" id="choice-drink">--</span>
+            </div>
+          </div>
+
+          <!-- 选择按钮 -->
+          <div class="food-choice-buttons" id="food-choice-buttons">
+            <button class="btn-random-all" id="btn-random-all">
+              🎲 随机全餐
+            </button>
+            <button class="btn-random-food" id="btn-random-food">
+              🍜 选个吃的
+            </button>
+            <button class="btn-random-drink" id="btn-random-drink">
+              🥤 选个喝的
+            </button>
+          </div>
+
+          <!-- 确认按钮 -->
+          <div class="food-confirm-section" id="food-confirm-section" style="display: none;">
+            <button class="btn-confirm-choice" id="btn-confirm-choice">
+              ✅ 确认选择
+            </button>
+          </div>
+
+          <!-- 已锁定提示 -->
+          <div class="food-locked-section" id="food-locked-section" style="display: none;">
+            <div class="locked-badge">
+              <span class="lock-icon">🔒</span>
+              <span>今日已确认</span>
+            </div>
+            <p class="locked-hint">想要重新选择？</p>
+            <button class="btn-unlock" id="btn-unlock">
+              🔓 重新来过
+            </button>
+          </div>
+
+        </section>
+
+      </div>
+      <!-- 美食抉择Tab内容结束 -->
+
     </main>
     
     <!-- 页脚 -->

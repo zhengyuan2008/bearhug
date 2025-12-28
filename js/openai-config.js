@@ -11,11 +11,12 @@ const OPENAI_CONFIG = {
     // 🔧 本地调试时，是否使用真实的OpenAI API
     // true  = 直接调用OpenAI API（用于调试prompt）
     // false = 使用Mock数据（默认）
-    useRealAPI: false,  // 默认关闭，需要时手动开启
+    useRealAPI: false,  // 默认关闭，避免意外调用
 
-    // ⚠️ 仅用于本地调试！不要提交真实的API key到GitHub！
-    // 请在本地替换为你的OpenAI API key
-    apiKey: 'YOUR_OPENAI_API_KEY_HERE',
+    // ⚠️ 仅用于本地调试！从环境变量或本地配置文件读取API key
+    // 本地开发时，请在浏览器 Console 中设置：
+    // localStorage.setItem('openai_api_key', 'your-api-key-here')
+    apiKey: '',
 
     // OpenAI API配置
     endpoint: 'https://api.openai.com/v1/responses',
@@ -95,11 +96,20 @@ async function callOpenAIDirectly(month, day) {
   try {
     const config = OPENAI_CONFIG.localDevelopment;
 
+    // 从localStorage获取API key（用于本地开发）
+    const apiKey = localStorage.getItem('openai_api_key') || config.apiKey;
+
+    if (!apiKey) {
+      console.warn('⚠️ API Key未配置，请在Console执行：');
+      console.warn('localStorage.setItem("openai_api_key", "your-api-key-here")');
+      return getMockHistoryStory(month, day);
+    }
+
     const response = await fetch(config.endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: config.model,

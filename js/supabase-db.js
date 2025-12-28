@@ -289,3 +289,171 @@ async function initDatabaseSync() {
 
   console.log('=== Database sync initialized ===');
 }
+
+// ========================================
+// 心情记录
+// ========================================
+
+/**
+ * 保存心情记录到云端
+ */
+async function saveEmotionLog(emotionType) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, emotion not saved to cloud');
+    return;
+  }
+
+  try {
+    const { data, error } = await client
+      .from('emotion_logs')
+      .insert([{
+        emotion_type: emotionType
+      }]);
+
+    if (error) throw error;
+    console.log('✓ Emotion logged to cloud:', emotionType);
+  } catch (error) {
+    console.error('Error saving emotion log:', error);
+  }
+}
+
+/**
+ * 获取最近的心情记录
+ */
+async function getRecentEmotions(days = 7) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const { data, error } = await client
+      .from('emotion_logs')
+      .select('*')
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error loading emotion logs:', error);
+    return [];
+  }
+}
+
+// ========================================
+// 美食选择
+// ========================================
+
+/**
+ * 获取所有可用的美食选项
+ */
+async function getFoodOptions() {
+  const client = getSupabase();
+  if (!client) return { foods: [], drinks: [] };
+
+  try {
+    const { data, error } = await client
+      .from('food_options')
+      .select('*')
+      .eq('is_active', true)
+      .order('name');
+
+    if (error) throw error;
+
+    const foods = data.filter(item => item.category === 'food');
+    const drinks = data.filter(item => item.category === 'drink');
+
+    return { foods, drinks };
+  } catch (error) {
+    console.error('Error loading food options:', error);
+    return { foods: [], drinks: [] };
+  }
+}
+
+/**
+ * 获取今日已选择的美食
+ */
+async function getTodayFoodChoice() {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    const { data, error } = await client
+      .from('food_choices')
+      .select('*')
+      .eq('choice_date', today)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+    return data && data.length > 0 ? data[0] : null;
+  } catch (error) {
+    console.error('Error loading today food choice:', error);
+    return null;
+  }
+}
+
+/**
+ * 保存美食选择
+ */
+async function saveFoodChoice(foodName, drinkName = null, isLocked = false) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, food choice not saved');
+    return null;
+  }
+
+  try {
+    const { data, error } = await client
+      .from('food_choices')
+      .insert([{
+        food_name: foodName,
+        drink_name: drinkName,
+        is_locked: isLocked
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Food choice saved:', foodName, drinkName, 'locked:', isLocked);
+    return data;
+  } catch (error) {
+    console.error('Error saving food choice:', error);
+    return null;
+  }
+}
+
+/**
+ * 获取最近的美食选择历史（不包括今天）
+ */
+async function getRecentFoodChoices(days = 7) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const today = new Date().toISOString().split('T')[0]; // 今天的日期
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days); // 往前推N天
+    const startDateStr = startDate.toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('food_choices')
+      .select('*')
+      .gte('choice_date', startDateStr)  // >= 开始日期
+      .lt('choice_date', today)          // < 今天（排除今天）
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    console.log(`✓ 获取到过去${days}天的历史记录（不含今天）:`, data?.length || 0, '条');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading food choice history:', error);
+    return [];
+  }
+}
+

@@ -219,12 +219,12 @@ body::before {
 
 .tab-button {
   flex: 1;
-  padding: 10px 20px;
+  padding: 10px 12px;
   border: none;
   border-radius: 12px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -232,7 +232,8 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .tab-button:hover {
@@ -828,15 +829,27 @@ body::before {
   .glass-card {
     padding: 20px;
   }
-  
+
   .title {
     font-size: 20px;
   }
-  
+
+  .tab-button {
+    font-size: 12px;
+    padding: 8px 6px;
+    gap: 3px;
+  }
+
+  .food-choice-buttons button {
+    font-size: 11px;
+    padding: 10px 4px;
+    min-width: 80px;
+  }
+
   .action-buttons {
     flex-direction: column;
   }
-  
+
   .btn-main, .btn-secondary {
     width: 100%;
   }
@@ -1235,4 +1248,363 @@ body::before {
   font-size: 12px;
   padding: 20px;
   font-style: italic;
+}
+
+/* ========================================
+   美食抉择样式
+   ======================================== */
+
+.food-choice-section {
+  margin-top: 0;
+}
+
+/* 日期显示 */
+.food-date-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.food-date-label {
+  font-size: 16px;
+}
+
+.food-date-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 摇骰子动画 */
+.dice-animation {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.dice {
+  font-size: 64px;
+  animation: diceShake 0.3s infinite;
+  display: inline-block;
+}
+
+@keyframes diceShake {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-5px, -5px) rotate(-5deg);
+  }
+  20% {
+    transform: translate(5px, -5px) rotate(5deg);
+  }
+  30% {
+    transform: translate(-5px, 5px) rotate(-5deg);
+  }
+  40% {
+    transform: translate(5px, 5px) rotate(5deg);
+  }
+  50% {
+    transform: translate(-5px, 0) rotate(-3deg);
+  }
+  60% {
+    transform: translate(5px, 0) rotate(3deg);
+  }
+  70% {
+    transform: translate(0, -5px) rotate(-2deg);
+  }
+  80% {
+    transform: translate(0, 5px) rotate(2deg);
+  }
+  90% {
+    transform: translate(-3px, 0) rotate(-1deg);
+  }
+}
+
+.dice-animation p {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--text-soft);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 确认按钮区域 */
+.food-confirm-section {
+  margin-top: 16px;
+}
+
+.btn-confirm-choice {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-confirm-choice:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-confirm-choice:active {
+  transform: translateY(0);
+}
+
+/* 锁定状态 */
+.food-locked-section {
+  text-align: center;
+  padding: 24px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.locked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ef4444;
+  margin-bottom: 12px;
+}
+
+.lock-icon {
+  font-size: 18px;
+  animation: lockPulse 2s ease-in-out infinite;
+}
+
+@keyframes lockPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.locked-hint {
+  font-size: 13px;
+  color: var(--text-soft);
+  margin: 12px 0;
+}
+
+.btn-unlock {
+  padding: 10px 20px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #ef4444;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-unlock:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-unlock:active {
+  transform: translateY(0);
+}
+
+/* 原有样式保留 */
+.btn-food-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 12px;
+  color: #ef4444;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-food-choice:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-food-choice:active {
+  transform: translateY(0);
+}
+
+.food-choice-content {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-inner), 0 4px 12px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.food-choice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.food-choice-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-close-food {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-soft);
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+}
+
+.btn-close-food:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-primary);
+}
+
+.food-choice-image {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.food-choice-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.food-choice-result {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.choice-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.choice-item:last-child {
+  margin-bottom: 0;
+}
+
+.choice-label {
+  font-size: 13px;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+.choice-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.food-choice-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.food-choice-buttons button {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.btn-random-all {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.btn-random-all:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-random-food {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #f59e0b;
+}
+
+.btn-random-food:hover {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-random-drink {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.btn-random-drink:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.food-choice-buttons button:active {
+  transform: translateY(0);
+}
+
+.food-choice-loading {
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 12px;
+  padding: 16px;
+  margin: 0;
 }
