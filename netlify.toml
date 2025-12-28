@@ -1,0 +1,15 @@
+# Netlify 配置文件
+
+[build]
+  # 构建命令（如果有需要）
+  command = ""
+  # 发布目录（当前项目是静态站点，发布根目录）
+  publish = "."
+
+[functions]
+  # Functions 目录
+  directory = "netlify/functions"
+
+# 环境变量（需要在Netlify Dashboard配置实际值）
+# 这里只是说明需要哪些环境变量
+# OPENAI_API_KEY=your-api-key-here

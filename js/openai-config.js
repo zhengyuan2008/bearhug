@@ -3,14 +3,10 @@
    ======================================== */
 
 const OPENAI_CONFIG = {
-  // ⚠️ 重要：不要直接在这里写API key！
-  // 应该使用环境变量或Netlify Functions
-  apiKey: '', // 暂时留空，稍后配置
+  // 使用Netlify Function作为代理，保护API key
+  functionEndpoint: '/.netlify/functions/history-story',
 
-  endpoint: 'https://api.openai.com/v1/responses',
-  model: 'gpt-5-nano',
-
-  // 历史上的今天提示词模板
+  // 历史上的今天提示词模板（已移到Netlify Function中）
   historyPrompt: (month, day) => `请讲述一个发生在${month}月${day}日的有趣历史事件。
 
 要求：
@@ -24,41 +20,35 @@ const OPENAI_CONFIG = {
 };
 
 /**
- * 调用OpenAI API生成历史故事
+ * 调用Netlify Function生成历史故事
  */
 async function generateHistoryStory(month, day) {
-  // 如果没有配置API key，返回模拟数据
-  if (!OPENAI_CONFIG.apiKey) {
-    console.warn('OpenAI API key not configured');
-    return getMockHistoryStory(month, day);
-  }
-
   try {
-    const response = await fetch(OPENAI_CONFIG.endpoint, {
+    console.log(`Calling Netlify Function for ${month}/${day}...`);
+
+    const response = await fetch(OPENAI_CONFIG.functionEndpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_CONFIG.apiKey}`
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: OPENAI_CONFIG.model,
-        input: OPENAI_CONFIG.historyPrompt(month, day),
-        store: true
-      })
+      body: JSON.stringify({ month, day })
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+      throw new Error(`Function request failed: ${response.status}`);
     }
 
     const data = await response.json();
 
-    // 根据实际API响应格式调整
-    // 这里假设响应格式，需要根据GPT-5实际API调整
-    return data.output || data.text || data.content || '加载失败';
+    console.log('Story source:', data.source);
+    if (data.error) {
+      console.warn('Function returned error:', data.error);
+    }
+
+    return data.story;
 
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('Netlify Function error:', error);
     return getMockHistoryStory(month, day);
   }
 }
