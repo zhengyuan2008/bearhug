@@ -67,7 +67,7 @@ async function getPeriodHistory(limit = 12) {
     const { data, error } = await client
       .from('period_records')
       .select('*')
-      .eq('session_id', getSessionId())
+      // 移除session_id过滤，全局共享数据
       .order('start_date', { ascending: false })
       .limit(limit);
 
@@ -92,10 +92,10 @@ async function deleteLatestPeriodRecord() {
     console.log('=== 开始删除最新记录 ===');
 
     // 先获取最新的记录（按创建时间排序）
+    // 移除session_id过滤，全局共享数据
     const { data: latest, error: fetchError } = await client
       .from('period_records')
       .select('*')
-      .eq('session_id', getSessionId())
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
@@ -179,7 +179,7 @@ async function getCheckinHistory(days = 30) {
     const { data, error } = await client
       .from('survival_checkins')
       .select('*')
-      .eq('session_id', getSessionId())
+      // 移除session_id过滤，全局共享数据
       .gte('checkin_date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
       .order('checkin_date', { ascending: false });
 
@@ -206,7 +206,7 @@ async function getEmotionHistory(days = 7) {
     const { data, error } = await client
       .from('user_interactions')
       .select('*')
-      .eq('session_id', getSessionId())
+      // 移除session_id过滤，全局共享数据
       .eq('event_type', 'emotion_click')
       .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false });
