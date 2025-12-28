@@ -106,6 +106,25 @@
         </div>
       </section>
 
+      <!-- 历史上的今天区域 -->
+      <section class="history-today-section">
+        <button class="btn-history-today" id="btn-history-today">
+          <span>📜</span>
+          <span>历史上的今天</span>
+        </button>
+
+        <!-- 展开的历史内容 -->
+        <div class="history-today-content" id="history-today-content" style="display: none;">
+          <div class="history-today-header">
+            <h3>📅 历史上的今天</h3>
+            <button class="btn-close-history" id="btn-close-history">✕</button>
+          </div>
+          <div class="history-today-story" id="history-today-story">
+            <p class="history-today-loading">正在加载...</p>
+          </div>
+        </div>
+      </section>
+
       <!-- "我又活过了一天" 签到区域 -->
       <section class="survival-section" style="display: none;">
         <h2 class="section-title">「我又活过了一天」</h2>
@@ -191,6 +210,7 @@
   <script src="js/supabase-config.js?v=3"></script>
   <script src="js/supabase-db.js?v=3"></script>
   <script src="js/config.js?v=3"></script>
+  <script src="js/openai-config.js?v=1"></script>
   <script src="js/main.js?v=3"></script>
   <script src="js/fireworks.js?v=3"></script>
   <script>

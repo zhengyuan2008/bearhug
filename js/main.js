@@ -573,6 +573,20 @@ function bindEvents() {
     console.log('✓ 绑定了关闭心情回顾按钮');
   }
 
+  // 历史上的今天按钮
+  const historyTodayButton = document.getElementById('btn-history-today');
+  if (historyTodayButton) {
+    historyTodayButton.onclick = toggleHistoryToday;
+    console.log('✓ 绑定了历史上的今天按钮');
+  }
+
+  // 关闭历史上的今天按钮
+  const closeHistoryButton = document.getElementById('btn-close-history');
+  if (closeHistoryButton) {
+    closeHistoryButton.onclick = closeHistoryToday;
+    console.log('✓ 绑定了关闭历史按钮');
+  }
+
   console.log('事件绑定完成！');
 }
 
@@ -736,6 +750,87 @@ function generateMoodReviewHTML(groupedData) {
   });
 
   return html;
+}
+
+// ========================================
+// 历史上的今天功能
+// ========================================
+
+/**
+ * 切换历史上的今天显示
+ */
+async function toggleHistoryToday() {
+  const content = document.getElementById('history-today-content');
+  if (!content) return;
+
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    await loadHistoryToday();
+  } else {
+    content.style.display = 'none';
+  }
+}
+
+/**
+ * 关闭历史上的今天
+ */
+function closeHistoryToday() {
+  const content = document.getElementById('history-today-content');
+  if (content) {
+    content.style.display = 'none';
+  }
+}
+
+/**
+ * 加载历史上的今天
+ */
+async function loadHistoryToday() {
+  const storyElement = document.getElementById('history-today-story');
+  if (!storyElement) return;
+
+  // 显示加载中
+  storyElement.innerHTML = '<p class="history-today-loading">AI正在为你讲故事...</p>';
+
+  try {
+    // 获取今天的日期
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+
+    // 调用AI生成故事
+    const story = await generateHistoryStory(month, day);
+
+    // 显示故事
+    displayHistoryStory(story, month, day);
+
+  } catch (error) {
+    console.error('加载历史故事失败:', error);
+    storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
+  }
+}
+
+/**
+ * 显示历史故事
+ */
+function displayHistoryStory(story, month, day) {
+  const storyElement = document.getElementById('history-today-story');
+  if (!storyElement) return;
+
+  // 格式化日期
+  const dateStr = `${month}月${day}日`;
+
+  // 处理故事文本（保留换行）
+  const formattedStory = story
+    .split('\n')
+    .map(paragraph => paragraph.trim())
+    .filter(paragraph => paragraph.length > 0)
+    .map(paragraph => `<p>${paragraph}</p>`)
+    .join('');
+
+  storyElement.innerHTML = `
+    <h4>${dateStr}</h4>
+    ${formattedStory}
+  `;
 }
 
 // ========================================
