@@ -192,6 +192,35 @@ async function getCheckinHistory(days = 30) {
 }
 
 // ========================================
+// 情绪记录
+// ========================================
+
+/**
+ * 获取过去N天的情绪记录
+ */
+async function getEmotionHistory(days = 7) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('user_interactions')
+      .select('*')
+      .eq('session_id', getSessionId())
+      .eq('event_type', 'emotion_click')
+      .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    console.log('✓ Loaded emotion history:', data?.length || 0, 'records');
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching emotion history:', error);
+    return [];
+  }
+}
+
+// ========================================
 // 温暖语录库
 // ========================================
 

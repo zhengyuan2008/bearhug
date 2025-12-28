@@ -934,3 +934,162 @@ body::before {
   background: rgba(148, 163, 184, 0.15);
   color: var(--text-soft);
 }
+
+/* ========================================
+   心情回顾区域
+   ======================================== */
+
+.mood-review-section {
+  margin-top: 16px;
+}
+
+.btn-mood-review {
+  width: 100%;
+  padding: 10px 18px;
+  border-radius: var(--radius-button);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.08);
+  backdrop-filter: blur(8px);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-mood-review:hover {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.btn-mood-review:active {
+  transform: scale(0.98);
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.mood-review-content {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-inner), 0 4px 12px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.mood-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.mood-review-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-close-review {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-soft);
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+}
+
+.btn-close-review:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-primary);
+}
+
+.mood-review-loading {
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 12px;
+  padding: 20px;
+}
+
+.mood-review-day {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.mood-review-day:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.mood-review-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mood-review-day-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mood-review-day-title.today {
+  color: var(--primary);
+}
+
+.mood-review-day-stats {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.mood-review-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mood-review-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.mood-review-time {
+  color: var(--text-soft);
+  font-weight: 500;
+  min-width: 40px;
+}
+
+.mood-review-emotion {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-primary);
+}
+
+.mood-review-empty {
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 12px;
+  padding: 20px;
+  font-style: italic;
+}

@@ -186,19 +186,26 @@ function handleEmotionClick(emotionType) {
  */
 function logEmotion(emotionType) {
   try {
+    // 本地存储
     const log = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMOTION_LOG) || '[]');
     log.push({
       type: emotionType,
       date: getTodayString(),
       timestamp: new Date().toISOString()
     });
-    
+
     // 只保留最近30天的记录
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const filtered = log.filter(entry => new Date(entry.timestamp) > thirtyDaysAgo);
-    
+
     localStorage.setItem(STORAGE_KEYS.EMOTION_LOG, JSON.stringify(filtered));
+
+    // 同时记录到云端
+    logInteraction('emotion_click', {
+      emotion_type: emotionType,
+      timestamp: new Date().toISOString()
+    });
   } catch (e) {
     console.error('记录情绪失败:', e);
   }
@@ -552,7 +559,183 @@ function bindEvents() {
     });
   });
 
+  // 心情回顾按钮
+  const moodReviewButton = document.getElementById('btn-mood-review');
+  if (moodReviewButton) {
+    moodReviewButton.onclick = toggleMoodReview;
+    console.log('✓ 绑定了心情回顾按钮');
+  }
+
+  // 关闭心情回顾按钮
+  const closeMoodReviewButton = document.getElementById('btn-close-review');
+  if (closeMoodReviewButton) {
+    closeMoodReviewButton.onclick = closeMoodReview;
+    console.log('✓ 绑定了关闭心情回顾按钮');
+  }
+
   console.log('事件绑定完成！');
+}
+
+// ========================================
+// 心情回顾功能
+// ========================================
+
+/**
+ * 切换心情回顾显示
+ */
+async function toggleMoodReview() {
+  const content = document.getElementById('mood-review-content');
+  if (!content) return;
+
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    await loadMoodReview();
+  } else {
+    content.style.display = 'none';
+  }
+}
+
+/**
+ * 关闭心情回顾
+ */
+function closeMoodReview() {
+  const content = document.getElementById('mood-review-content');
+  if (content) {
+    content.style.display = 'none';
+  }
+}
+
+/**
+ * 加载并显示心情回顾
+ */
+async function loadMoodReview() {
+  const listElement = document.getElementById('mood-review-list');
+  if (!listElement) return;
+
+  // 显示加载中
+  listElement.innerHTML = '<p class="mood-review-loading">正在加载...</p>';
+
+  try {
+    // 从Supabase获取过去7天的情绪记录
+    const records = await getEmotionHistory(7);
+
+    if (!records || records.length === 0) {
+      listElement.innerHTML = '<p class="mood-review-empty">还没有心情记录哦，点击上面的情绪按钮记录你的心情吧 💝</p>';
+      return;
+    }
+
+    // 按天分组
+    const groupedByDay = groupRecordsByDay(records);
+
+    // 生成HTML
+    listElement.innerHTML = generateMoodReviewHTML(groupedByDay);
+  } catch (error) {
+    console.error('加载心情回顾失败:', error);
+    listElement.innerHTML = '<p class="mood-review-empty">加载失败，请稍后重试</p>';
+  }
+}
+
+/**
+ * 按天分组记录
+ */
+function groupRecordsByDay(records) {
+  const groups = {};
+  const today = getTodayString();
+
+  records.forEach(record => {
+    // 解析时间（Supabase返回的是UTC时间）
+    const date = new Date(record.created_at);
+    const dateString = formatDate(date);
+
+    if (!groups[dateString]) {
+      groups[dateString] = {
+        date: dateString,
+        isToday: dateString === today,
+        records: []
+      };
+    }
+
+    groups[dateString].records.push({
+      time: date,
+      emotionType: record.event_data?.emotion_type || 'unknown'
+    });
+  });
+
+  // 排序记录（每天内按时间倒序）
+  Object.values(groups).forEach(group => {
+    group.records.sort((a, b) => b.time - a.time);
+  });
+
+  // 按日期倒序排列
+  return Object.values(groups).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/**
+ * 生成心情回顾HTML
+ */
+function generateMoodReviewHTML(groupedData) {
+  const emotionConfig = {
+    tired: { emoji: '💙', text: '累' },
+    sad: { emoji: '🖤', text: '难过' },
+    scared: { emoji: '🌧', text: '有点怕' },
+    okay: { emoji: '🧡', text: '还好' },
+    fight: { emoji: '💔', text: '和胖🐰吵架了' }
+  };
+
+  let html = '';
+
+  groupedData.forEach(day => {
+    const dateObj = new Date(day.date + 'T00:00:00');
+    const monthDay = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+    const dayTitle = day.isToday ? `📊 今天 (${monthDay})` : monthDay;
+    const titleClass = day.isToday ? 'mood-review-day-title today' : 'mood-review-day-title';
+
+    // 统计每种情绪的次数
+    const stats = {};
+    day.records.forEach(record => {
+      stats[record.emotionType] = (stats[record.emotionType] || 0) + 1;
+    });
+
+    // 生成统计文本
+    const statsText = Object.entries(stats)
+      .map(([type, count]) => {
+        const config = emotionConfig[type] || { emoji: '❓', text: '未知' };
+        return `${config.emoji}×${count}`;
+      })
+      .join('  ');
+
+    html += `
+      <div class="mood-review-day">
+        <div class="mood-review-day-header">
+          <div class="${titleClass}">${dayTitle}</div>
+          <div class="mood-review-day-stats">${statsText}</div>
+        </div>
+        <div class="mood-review-timeline">
+    `;
+
+    // 生成时间线
+    day.records.forEach(record => {
+      const time = `${String(record.time.getHours()).padStart(2, '0')}:${String(record.time.getMinutes()).padStart(2, '0')}`;
+      const config = emotionConfig[record.emotionType] || { emoji: '❓', text: '未知' };
+
+      html += `
+        <div class="mood-review-item">
+          <div class="mood-review-time">${time}</div>
+          <div class="mood-review-emotion">
+            <span>${config.emoji}</span>
+            <span>${config.text}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  });
+
+  return html;
 }
 
 // ========================================
