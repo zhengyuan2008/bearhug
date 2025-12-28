@@ -23,6 +23,16 @@ const OPENAI_CONFIG = {
  * 调用Netlify Function生成历史故事
  */
 async function generateHistoryStory(month, day) {
+  // 检测是否在本地开发环境
+  const isLocalhost = window.location.hostname === 'localhost' ||
+                      window.location.hostname === '127.0.0.1';
+
+  // 本地开发时直接使用mock数据，避免调用不存在的Netlify Function
+  if (isLocalhost) {
+    console.log('🔧 本地开发模式：使用模拟历史故事');
+    return getMockHistoryStory(month, day);
+  }
+
   try {
     console.log(`Calling Netlify Function for ${month}/${day}...`);
 
