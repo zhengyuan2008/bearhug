@@ -11,7 +11,7 @@ const OPENAI_CONFIG = {
     // 🔧 本地调试时，是否使用真实的OpenAI API
     // true  = 直接调用OpenAI API（用于调试prompt）
     // false = 使用Mock数据（默认）
-    useRealAPI: false,  // 默认关闭，避免意外调用
+    useRealAPI: true,  // ✅ 开发分支：启用本地API测试
 
     // ⚠️ 仅用于本地调试！从环境变量或本地配置文件读取API key
     // 本地开发时，请在浏览器 Console 中设置：
