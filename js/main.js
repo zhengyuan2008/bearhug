@@ -473,24 +473,27 @@ function initUI() {
   // 设置标题和副标题
   const titleElement = document.getElementById('app-title');
   const subtitleElement = document.getElementById('app-subtitle');
-  
+
   if (titleElement) titleElement.textContent = CONFIG.ui.title;
   if (subtitleElement) subtitleElement.textContent = CONFIG.ui.subtitle;
-  
+
   // 初始化照片和消息
   updatePhotoAndMessage();
-  
+
   // 创建情绪按钮
   createEmotionButtons();
-  
+
   // 更新签到统计
   updateSurvivalStats();
-  
+
   // 更新姨妈记录
   updatePeriodInfo();
-  
+
   // 绑定事件
   bindEvents();
+
+  // 预加载历史上的今天（后台异步加载，不阻塞页面）
+  preloadHistoryStory();
 }
 
 /**
@@ -782,31 +785,120 @@ function closeHistoryToday() {
 }
 
 /**
- * 加载历史上的今天
+ * 获取localStorage缓存的故事
  */
-async function loadHistoryToday() {
+function getCachedStory(month, day) {
+  const cacheKey = `history_story_${month}_${day}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    try {
+      const data = JSON.parse(cached);
+      // 检查是否是今天的缓存（防止跨年问题）
+      const year = new Date().getFullYear();
+      if (data.year === year) {
+        return data.story;
+      }
+    } catch (e) {
+      console.error('解析缓存失败:', e);
+    }
+  }
+  return null;
+}
+
+/**
+ * 保存故事到localStorage
+ */
+function cacheStory(month, day, story) {
+  const cacheKey = `history_story_${month}_${day}`;
+  const year = new Date().getFullYear();
+  localStorage.setItem(cacheKey, JSON.stringify({ year, story }));
+}
+
+// 全局加载状态标记
+let isLoadingHistoryStory = false;
+let currentLoadingPromise = null;
+
+/**
+ * 加载历史上的今天（从缓存或API）
+ */
+async function loadHistoryToday(forceRefresh = false) {
   const storyElement = document.getElementById('history-today-story');
   if (!storyElement) return;
 
-  // 显示加载中
-  storyElement.innerHTML = '<p class="history-today-loading">AI正在为你讲故事...</p>';
+  // 获取今天的日期
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
 
-  try {
-    // 获取今天的日期
-    const today = new Date();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
+  // 如果不是强制刷新，先检查缓存
+  if (!forceRefresh) {
+    const cachedStory = getCachedStory(month, day);
+    if (cachedStory) {
+      console.log('📖 使用缓存的历史故事');
+      displayHistoryStory(cachedStory, month, day);
+      return;
+    }
 
-    // 调用AI生成故事
-    const story = await generateHistoryStory(month, day);
-
-    // 显示故事
-    displayHistoryStory(story, month, day);
-
-  } catch (error) {
-    console.error('加载历史故事失败:', error);
-    storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
+    // 如果正在预加载，等待预加载完成
+    if (isLoadingHistoryStory && currentLoadingPromise) {
+      console.log('⏳ 正在预加载中，等待完成...');
+      storyElement.innerHTML = '<p class="history-today-loading">正在加载中...</p>';
+      try {
+        await currentLoadingPromise;
+        // 预加载完成后，从缓存读取
+        const cachedStory = getCachedStory(month, day);
+        if (cachedStory) {
+          displayHistoryStory(cachedStory, month, day);
+        } else {
+          storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
+        }
+        return;  // 无论成功失败都返回，不再继续执行
+      } catch (error) {
+        console.error('预加载失败:', error);
+        storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
+        return;  // 失败后也返回，不再继续
+      }
+    }
   }
+
+  // 如果正在加载且是强制刷新，先取消之前的加载（强制刷新优先级高）
+  if (isLoadingHistoryStory && forceRefresh) {
+    console.log('🔄 强制刷新，取消之前的加载');
+    // 标记会在新的Promise中重新设置
+  }
+
+  // 显示加载中（带时间提示）
+  if (forceRefresh) {
+    storyElement.innerHTML = '<p class="history-today-loading">🔄 正在寻找新故事...<br><small>可能需要10-60秒，请稍候</small></p>';
+  } else {
+    storyElement.innerHTML = '<p class="history-today-loading">AI正在为你讲故事...<br><small>首次加载可能需要10-60秒</small></p>';
+  }
+
+  // 设置加载状态
+  isLoadingHistoryStory = true;
+  currentLoadingPromise = (async () => {
+    try {
+      // 调用AI生成故事
+      const story = await generateHistoryStory(month, day);
+
+      // 保存到缓存
+      cacheStory(month, day, story);
+
+      // 显示故事
+      displayHistoryStory(story, month, day);
+
+    } catch (error) {
+      console.error('加载历史故事失败:', error);
+      storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
+      throw error;
+    } finally {
+      // 清除加载状态
+      isLoadingHistoryStory = false;
+      currentLoadingPromise = null;
+    }
+  })();
+
+  await currentLoadingPromise;
 }
 
 /**
@@ -820,17 +912,80 @@ function displayHistoryStory(story, month, day) {
   const dateStr = `${month}月${day}日`;
 
   // 处理故事文本（保留换行）
-  const formattedStory = story
-    .split('\n')
-    .map(paragraph => paragraph.trim())
-    .filter(paragraph => paragraph.length > 0)
-    .map(paragraph => `<p>${paragraph}</p>`)
-    .join('');
+  let formattedStory;
+
+  if (typeof story === 'string') {
+    // 如果是字符串，正常处理换行
+    formattedStory = story
+      .split('\n')
+      .map(paragraph => paragraph.trim())
+      .filter(paragraph => paragraph.length > 0)
+      .map(paragraph => `<p>${paragraph}</p>`)
+      .join('');
+  } else {
+    // 如果不是字符串，直接显示
+    console.warn('Story不是字符串类型:', typeof story);
+    formattedStory = `<p>${String(story)}</p>`;
+  }
 
   storyElement.innerHTML = `
     <h4>${dateStr}</h4>
     ${formattedStory}
+    <button class="btn-refresh-story" id="btn-refresh-story" onclick="refreshHistoryStory()">
+      🔄 换一个故事
+    </button>
   `;
+}
+
+/**
+ * 刷新历史故事（重新调用API）
+ */
+async function refreshHistoryStory() {
+  await loadHistoryToday(true);  // forceRefresh = true
+}
+
+/**
+ * 预加载历史上的今天（页面加载时后台执行）
+ */
+async function preloadHistoryStory() {
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
+
+  // 检查是否已有缓存
+  const cachedStory = getCachedStory(month, day);
+  if (cachedStory) {
+    console.log('✅ 历史故事已缓存，无需预加载');
+    return;
+  }
+
+  // 如果已经在加载中，不要重复预加载
+  if (isLoadingHistoryStory) {
+    console.log('⚠️ 已经在加载中，跳过预加载');
+    return;
+  }
+
+  // 后台加载故事
+  console.log('🔄 开始预加载历史上的今天...');
+
+  // 设置加载状态和Promise（与loadHistoryToday共享）
+  isLoadingHistoryStory = true;
+  currentLoadingPromise = (async () => {
+    try {
+      const story = await generateHistoryStory(month, day);
+      cacheStory(month, day, story);
+      console.log('✅ 历史故事预加载完成');
+    } catch (error) {
+      console.error('❌ 预加载历史故事失败:', error);
+      throw error;
+    } finally {
+      isLoadingHistoryStory = false;
+      currentLoadingPromise = null;
+    }
+  })();
+
+  // 静默失败，不阻塞页面初始化
+  await currentLoadingPromise.catch(() => {});
 }
 
 // ========================================

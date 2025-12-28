@@ -6,17 +6,35 @@ const OPENAI_CONFIG = {
   // 使用Netlify Function作为代理，保护API key
   functionEndpoint: '/.netlify/functions/history-story',
 
+  // 本地开发配置
+  localDevelopment: {
+    // 🔧 本地调试时，是否使用真实的OpenAI API
+    // true  = 直接调用OpenAI API（用于调试prompt）
+    // false = 使用Mock数据（默认）
+    useRealAPI: false,  // 默认关闭，需要时手动开启
+
+    // ⚠️ 仅用于本地调试！不要提交真实的API key到GitHub！
+    // 请在本地替换为你的OpenAI API key
+    apiKey: 'YOUR_OPENAI_API_KEY_HERE',
+
+    // OpenAI API配置
+    endpoint: 'https://api.openai.com/v1/responses',
+    model: 'gpt-5-nano'
+  },
+
   // 历史上的今天提示词模板（已移到Netlify Function中）
-  historyPrompt: (month, day) => `请讲述一个发生在${month}月${day}日的有趣历史事件。
+  historyPrompt: (month, day) => `请讲述一个发生在${month}月${day}日的真实历史事件。
+
+⚠️ 重要：必须是可验证的真实历史事件，不能编造或虚构！
 
 要求：
-1. 选择一个真实的历史事件
-2. 用温暖、有趣的口吻讲述
-3. 字数控制在150-200字
-4. 适合给女朋友讲故事的语气
+1. 必须包含具体的年份、人物姓名或事件名称
+2. 选择有趣、温暖或有意义的历史事件
+3. 用亲切、有趣的口吻讲述
+4. 字数控制在120-150字
 5. 结尾可以加一句温暖的话
 
-请直接开始讲故事，不要加标题或额外说明。`
+请直接开始讲故事，不要加标题或额外说明，不要询问用户。`
 };
 
 /**
@@ -27,12 +45,19 @@ async function generateHistoryStory(month, day) {
   const isLocalhost = window.location.hostname === 'localhost' ||
                       window.location.hostname === '127.0.0.1';
 
-  // 本地开发时直接使用mock数据，避免调用不存在的Netlify Function
+  // 本地开发模式
   if (isLocalhost) {
-    console.log('🔧 本地开发模式：使用模拟历史故事');
-    return getMockHistoryStory(month, day);
+    // 如果启用了真实API调用（用于调试prompt）
+    if (OPENAI_CONFIG.localDevelopment.useRealAPI && OPENAI_CONFIG.localDevelopment.apiKey) {
+      console.log('🔧 本地开发模式：调用真实OpenAI API');
+      return await callOpenAIDirectly(month, day);
+    } else {
+      console.log('🔧 本地开发模式：使用模拟历史故事');
+      return getMockHistoryStory(month, day);
+    }
   }
 
+  // 生产环境：调用Netlify Function
   try {
     console.log(`Calling Netlify Function for ${month}/${day}...`);
 
@@ -59,6 +84,61 @@ async function generateHistoryStory(month, day) {
 
   } catch (error) {
     console.error('Netlify Function error:', error);
+    return getMockHistoryStory(month, day);
+  }
+}
+
+/**
+ * 本地开发：直接调用OpenAI API（用于调试prompt）
+ */
+async function callOpenAIDirectly(month, day) {
+  try {
+    const config = OPENAI_CONFIG.localDevelopment;
+
+    const response = await fetch(config.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`
+      },
+      body: JSON.stringify({
+        model: config.model,
+        input: OPENAI_CONFIG.historyPrompt(month, day),
+        store: true,
+        reasoning: null,
+        text: {
+          verbosity: 'low'  // 减少冗余输出
+        }
+        // 移除max_output_tokens限制，让模型有足够空间输出
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ OpenAI API响应成功');
+
+    // GPT-5 API响应格式: data.output[1].content[0].text
+    // output是数组，第二个元素(type="message")包含实际回复
+    if (data.output && Array.isArray(data.output)) {
+      const messageItem = data.output.find(item => item.type === 'message');
+      if (messageItem && messageItem.content && messageItem.content[0]) {
+        const text = messageItem.content[0].text;
+        console.log('✅ 成功提取故事文本');
+        return text;
+      }
+    }
+
+    console.warn('⚠️ 无法从API响应提取文本，使用fallback');
+    return getMockHistoryStory(month, day);
+
+  } catch (error) {
+    console.error('直接调用OpenAI API失败:', error);
+    console.log('回退到Mock数据');
     return getMockHistoryStory(month, day);
   }
 }

@@ -30,9 +30,18 @@ exports.handler = async (event, context) => {
     };
   }
 
+  // 在try-catch外层获取参数，确保错误处理能访问
+  let month, day;
+
   try {
     // 解析请求参数
-    const { month, day } = JSON.parse(event.body);
+    const requestBody = JSON.parse(event.body || '{}');
+    month = requestBody.month;
+    day = requestBody.day;
+
+    console.log('=== History Story Function ===');
+    console.log('Date:', month, '/', day);
+    console.log('Has API Key:', !!process.env.OPENAI_API_KEY);
 
     // 验证参数
     if (!month || !day) {
@@ -45,30 +54,33 @@ exports.handler = async (event, context) => {
 
     // 检查API key是否配置
     if (!process.env.OPENAI_API_KEY) {
-      console.warn('OPENAI_API_KEY not configured');
+      console.warn('OPENAI_API_KEY not configured, using fallback');
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           story: getFallbackStory(month, day),
-          source: 'fallback'
+          source: 'fallback',
+          reason: 'API key not configured'
         })
       };
     }
 
     // 构建提示词
-    const prompt = `请讲述一个发生在${month}月${day}日的有趣历史事件。
+    const prompt = `请讲述一个发生在${month}月${day}日的真实历史事件。
+
+⚠️ 重要：必须是可验证的真实历史事件，不能编造或虚构！
 
 要求：
-1. 选择一个真实的历史事件
-2. 用温暖、有趣的口吻讲述
-3. 字数控制在150-200字
-4. 适合给女朋友讲故事的语气
+1. 必须包含具体的年份、人物姓名或事件名称
+2. 选择有趣、温暖或有意义的历史事件
+3. 用亲切、有趣的口吻讲述
+4. 字数控制在120-150字
 5. 结尾可以加一句温暖的话
 
 请直接开始讲故事，不要加标题或额外说明。`;
 
-    console.log(`Calling OpenAI API for ${month}/${day}...`);
+    console.log('Calling OpenAI API...');
 
     // 调用OpenAI API
     const response = await fetch('https://api.openai.com/v1/responses', {
@@ -80,9 +92,18 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         model: 'gpt-5-nano',
         input: prompt,
-        store: true
+        store: true,
+        reasoning: {
+          effort: 'medium'  // 保持medium确保事实准确性，避免编造
+        },
+        text: {
+          verbosity: 'low'  // 减少冗余输出
+        }
+        // 移除max_output_tokens限制，让模型有足够空间输出
       })
     });
+
+    console.log('OpenAI API response status:', response.status);
 
     // 检查响应状态
     if (!response.ok) {
@@ -96,7 +117,7 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({
           story: getFallbackStory(month, day),
           source: 'fallback',
-          error: `API error: ${response.status}`
+          reason: `API error: ${response.status}`
         })
       };
     }
@@ -104,30 +125,44 @@ exports.handler = async (event, context) => {
     const data = await response.json();
     console.log('OpenAI API response received');
 
-    // 提取故事内容（根据实际API响应格式调整）
-    const story = data.output || data.text || data.content || getFallbackStory(month, day);
+    // GPT-5 API响应格式: data.output[1].content[0].text
+    let story;
+    if (data.output && Array.isArray(data.output)) {
+      const messageItem = data.output.find(item => item.type === 'message');
+      if (messageItem && messageItem.content && messageItem.content[0]) {
+        story = messageItem.content[0].text;
+      }
+    }
+
+    // 如果提取失败，使用fallback
+    if (!story) {
+      console.warn('Failed to extract text from API response');
+      story = getFallbackStory(month, day);
+    }
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         story,
-        source: 'openai'
+        source: story === getFallbackStory(month, day) ? 'fallback' : 'openai'
       })
     };
 
   } catch (error) {
-    console.error('Function error:', error);
+    console.error('=== Function Error ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
 
     // 发生错误时返回fallback故事
-    const { month, day } = JSON.parse(event.body || '{}');
-
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         story: getFallbackStory(month, day),
         source: 'fallback',
+        reason: 'Function error',
         error: error.message
       })
     };
