@@ -45,6 +45,10 @@
         <span>🍱</span>
         <span>美食抉择</span>
       </button>
+      <button class="tab-button" data-tab="work-troubles" id="tab-work-troubles">
+        <span>💼</span>
+        <span>工作烦恼</span>
+      </button>
     </nav>
     
     <!-- 主内容区 -->
@@ -268,6 +272,54 @@
 
       </div>
       <!-- 美食抉择Tab内容结束 -->
+
+      <!-- 工作烦恼Tab内容 -->
+      <div class="tab-content" id="content-work-troubles">
+
+        <!-- 欢迎区域 -->
+        <section class="glass-mini-card work-troubles-welcome">
+          <h2 class="section-title">💼 今天工作上遇到什么烦心事了吗？</h2>
+          <p class="section-description">选择一个场景，我来帮你想想办法 🫂</p>
+        </section>
+
+        <!-- 场景选择网格 -->
+        <section class="work-troubles-scenarios" id="work-scenarios-grid">
+          <!-- 动态加载场景卡片 -->
+        </section>
+
+        <!-- 场景详情视图 -->
+        <section class="work-troubles-detail glass-mini-card" id="work-scenario-detail" style="display: none;">
+          <button class="btn-back" id="btn-work-back">← 返回选择场景</button>
+          <div class="scenario-detail-header">
+            <h3 class="scenario-detail-title" id="scenario-detail-title"></h3>
+            <p class="scenario-detail-desc" id="scenario-detail-desc"></p>
+          </div>
+
+          <!-- 话术分类 -->
+          <div class="phrase-categories" id="phrase-categories-container">
+            <!-- 动态加载分类和话术 -->
+          </div>
+        </section>
+
+        <!-- AI润色模态框 -->
+        <div class="ai-enhancement-modal" id="ai-modal" style="display: none;">
+          <div class="ai-modal-overlay" id="ai-modal-overlay"></div>
+          <div class="ai-modal-content">
+            <button class="ai-modal-close" id="ai-modal-close">✕</button>
+            <h4 class="ai-modal-title">✨ AI正在为你个性化这段话...</h4>
+            <div class="ai-loading" id="ai-loading">
+              <div class="loading-spinner">⏳</div>
+              <p>请稍候...</p>
+            </div>
+            <div class="ai-result" id="ai-result" style="display: none;">
+              <p class="ai-enhanced-text" id="ai-enhanced-text"></p>
+              <button class="btn-main" id="btn-copy-ai">📋 复制到剪贴板</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- 工作烦恼Tab内容结束 -->
 
     </main>
     

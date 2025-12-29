@@ -457,3 +457,87 @@ async function getRecentFoodChoices(days = 7) {
   }
 }
 
+// ========================================
+// 工作烦恼
+// ========================================
+
+/**
+ * 获取所有工作烦恼场景
+ */
+async function getWorkScenarios() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('work_scenarios')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+
+    if (error) throw error;
+    console.log('✓ Loaded work scenarios:', data?.length || 0, 'items');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading work scenarios:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取指定场景的所有话术
+ */
+async function getWorkPhrases(scenarioId) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('work_phrases')
+      .select('*')
+      .eq('scenario_id', scenarioId)
+      .eq('is_active', true)
+      .order('phrase_type')
+      .order('display_order');
+
+    if (error) throw error;
+    console.log('✓ Loaded phrases for scenario:', scenarioId, data?.length || 0, 'phrases');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading work phrases:', error);
+    return [];
+  }
+}
+
+/**
+ * 保存工作烦恼记录
+ */
+async function saveWorkTroubleLog(scenarioId, phraseIds = [], aiResponse = null) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, log not saved');
+    return null;
+  }
+
+  try {
+    const { data, error} = await client
+      .from('work_trouble_logs')
+      .insert([{
+        session_id: getSessionId(),
+        scenario_id: scenarioId,
+        selected_phrase_ids: phraseIds,
+        ai_enhanced: !!aiResponse,
+        ai_response: aiResponse
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Work trouble log saved');
+    return data;
+  } catch (error) {
+    console.error('Error saving work trouble log:', error);
+    return null;
+  }
+}
+

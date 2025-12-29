@@ -467,6 +467,11 @@ function switchTab(tabName) {
     initFoodTab();
   }
 
+  // 如果切换到工作烦恼，初始化
+  if (tabName === 'work-troubles') {
+    initWorkTroublesTab();
+  }
+
   console.log('=== Tab切换完成 ===');
 }
 
@@ -631,6 +636,31 @@ function bindEvents() {
   if (unlockButton) {
     unlockButton.onclick = requestUnlock;
     console.log('✓ 绑定了解锁按钮');
+  }
+
+  // Work Troubles Tab
+  const btnWorkBack = document.getElementById('btn-work-back');
+  if (btnWorkBack) {
+    btnWorkBack.onclick = backToScenarios;
+    console.log('✓ 绑定了工作烦恼返回按钮');
+  }
+
+  const aiModalClose = document.getElementById('ai-modal-close');
+  if (aiModalClose) {
+    aiModalClose.onclick = closeAIModal;
+    console.log('✓ 绑定了AI模态框关闭按钮');
+  }
+
+  const aiModalOverlay = document.getElementById('ai-modal-overlay');
+  if (aiModalOverlay) {
+    aiModalOverlay.onclick = closeAIModal;
+    console.log('✓ 绑定了AI模态框遮罩层');
+  }
+
+  const btnCopyAI = document.getElementById('btn-copy-ai');
+  if (btnCopyAI) {
+    btnCopyAI.onclick = copyAIEnhancedText;
+    console.log('✓ 绑定了AI复制按钮');
   }
 
   console.log('事件绑定完成！');
@@ -1039,6 +1069,11 @@ let foodOptions = { foods: [], drinks: [] };
 let todayChoice = null;
 let isChoiceLocked = false;
 let tempChoice = null; // 临时选择，未确认前不保存数据库
+
+// Work Troubles State
+let workScenarios = [];
+let currentScenario = null;
+let workPhrases = [];
 
 /**
  * 初始化美食抉择Tab
@@ -1491,3 +1526,290 @@ function displayFoodChoice(foodName, drinkName) {
 // ========================================
 
 document.addEventListener('DOMContentLoaded', initUI);
+// ========================================
+// 工作烦恼功能
+// ========================================
+
+/**
+ * 初始化工作烦恼tab
+ */
+async function initWorkTroublesTab() {
+  console.log('=== Initializing Work Troubles Tab ===');
+
+  // Load scenarios
+  workScenarios = await getWorkScenarios();
+
+  // Render scenario grid
+  renderScenarioGrid();
+
+  // Ensure detail view is hidden
+  const detailView = document.getElementById('work-scenario-detail');
+  if (detailView) detailView.style.display = 'none';
+
+  const scenariosGrid = document.getElementById('work-scenarios-grid');
+  if (scenariosGrid) scenariosGrid.style.display = 'grid';
+}
+
+/**
+ * 渲染场景网格
+ */
+function renderScenarioGrid() {
+  const grid = document.getElementById('work-scenarios-grid');
+  if (\!grid) return;
+
+  if (workScenarios.length === 0) {
+    grid.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">暂无可用场景</p>';
+    return;
+  }
+
+  grid.innerHTML = workScenarios.map(scenario => `
+    <div class="scenario-card" data-scenario-id="${scenario.id}">
+      <div class="scenario-icon">${scenario.icon}</div>
+      <p class="scenario-name">${scenario.name}</p>
+    </div>
+  `).join('');
+
+  // Bind click events
+  grid.querySelectorAll('.scenario-card').forEach(card => {
+    card.onclick = () => {
+      const scenarioId = card.getAttribute('data-scenario-id');
+      selectScenario(scenarioId);
+    };
+  });
+
+  console.log('✓ Rendered', workScenarios.length, 'scenarios');
+}
+
+/**
+ * 选择场景
+ */
+async function selectScenario(scenarioId) {
+  console.log('=== Selecting scenario:', scenarioId);
+
+  // Find scenario
+  currentScenario = workScenarios.find(s => s.id === scenarioId);
+  if (\!currentScenario) {
+    showToast('场景加载失败');
+    return;
+  }
+
+  // Load phrases
+  workPhrases = await getWorkPhrases(scenarioId);
+
+  // Update UI
+  const title = document.getElementById('scenario-detail-title');
+  const desc = document.getElementById('scenario-detail-desc');
+
+  if (title) title.textContent = `${currentScenario.icon} ${currentScenario.name}`;
+  if (desc) desc.textContent = currentScenario.description || '';
+
+  // Render phrases
+  renderPhraseCategories();
+
+  // Show detail view
+  document.getElementById('work-scenarios-grid').style.display = 'none';
+  document.getElementById('work-scenario-detail').style.display = 'block';
+
+  // Log interaction
+  saveWorkTroubleLog(scenarioId, [], null);
+}
+
+/**
+ * 渲染话术分类
+ */
+function renderPhraseCategories() {
+  const container = document.getElementById('phrase-categories-container');
+  if (\!container) return;
+
+  // Group phrases by type
+  const phrasesByType = {
+    comfort: workPhrases.filter(p => p.phrase_type === 'comfort'),
+    strategy: workPhrases.filter(p => p.phrase_type === 'strategy'),
+    script: workPhrases.filter(p => p.phrase_type === 'script'),
+    support: workPhrases.filter(p => p.phrase_type === 'support')
+  };
+
+  const categoryNames = {
+    comfort: { icon: '💝', name: '情感安慰' },
+    strategy: { icon: '💡', name: '应对策略' },
+    script: { icon: '💬', name: '对话话术' },
+    support: { icon: '🌟', name: '鼓励支持' }
+  };
+
+  container.innerHTML = Object.entries(phrasesByType).map(([type, phrases]) => {
+    if (phrases.length === 0) return '';
+
+    const category = categoryNames[type];
+    return `
+      <div class="phrase-category">
+        <button class="category-header" data-category="${type}">
+          <span><span class="category-icon">${category.icon}</span>${category.name}</span>
+          <span class="category-arrow">▼</span>
+        </button>
+        <div class="category-content">
+          ${phrases.map(phrase => `
+            <div class="phrase-item" data-phrase-id="${phrase.id}">
+              <p class="phrase-text">${phrase.content}</p>
+              <div class="phrase-actions">
+                <button class="btn-copy" data-action="copy" data-phrase-id="${phrase.id}">
+                  📋 复制
+                </button>
+                <button class="btn-ai-polish" data-action="ai" data-phrase-id="${phrase.id}">
+                  ✨ AI润色
+                </button>
+                <button class="btn-helpful" data-action="helpful" data-phrase-id="${phrase.id}">
+                  ♥ 有用
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Bind events
+  bindPhraseEvents();
+}
+
+/**
+ * 绑定话术事件
+ */
+function bindPhraseEvents() {
+  // Category toggle
+  document.querySelectorAll('.category-header').forEach(header => {
+    header.onclick = () => toggleCategory(header);
+  });
+
+  // Phrase actions
+  document.querySelectorAll('.phrase-actions button').forEach(btn => {
+    const action = btn.getAttribute('data-action');
+    const phraseId = btn.getAttribute('data-phrase-id');
+
+    if (action === 'copy') {
+      btn.onclick = () => copyPhrase(phraseId);
+    } else if (action === 'ai') {
+      btn.onclick = () => requestAIPolish(phraseId);
+    } else if (action === 'helpful') {
+      btn.onclick = (e) => markPhraseHelpful(phraseId, e.target);
+    }
+  });
+}
+
+/**
+ * 切换分类展开/收起
+ */
+function toggleCategory(headerElement) {
+  const content = headerElement.nextElementSibling;
+
+  if (content.classList.contains('expanded')) {
+    content.classList.remove('expanded');
+    headerElement.classList.remove('expanded');
+  } else {
+    content.classList.add('expanded');
+    headerElement.classList.add('expanded');
+  }
+}
+
+/**
+ * 复制话术到剪贴板
+ */
+async function copyPhrase(phraseId) {
+  const phrase = workPhrases.find(p => p.id === phraseId);
+  if (\!phrase) return;
+
+  try {
+    await navigator.clipboard.writeText(phrase.content);
+    showToast('✅ 已复制到剪贴板');
+  } catch (error) {
+    console.error('Copy failed:', error);
+    showToast('复制失败，请手动选择文字复制');
+  }
+}
+
+/**
+ * 请求AI润色
+ */
+async function requestAIPolish(phraseId) {
+  const phrase = workPhrases.find(p => p.id === phraseId);
+  if (\!phrase || \!currentScenario) return;
+
+  // Show modal
+  const modal = document.getElementById('ai-modal');
+  const loading = document.getElementById('ai-loading');
+  const result = document.getElementById('ai-result');
+
+  if (modal) modal.style.display = 'flex';
+  if (loading) loading.style.display = 'block';
+  if (result) result.style.display = 'none';
+
+  try {
+    const enhanced = await enhancePhraseWithAI(
+      phrase.content,
+      currentScenario.name,
+      currentScenario.description || ''
+    );
+
+    // Show result
+    const textEl = document.getElementById('ai-enhanced-text');
+    if (textEl) textEl.textContent = enhanced;
+
+    if (loading) loading.style.display = 'none';
+    if (result) result.style.display = 'block';
+
+    // Log with AI response
+    saveWorkTroubleLog(currentScenario.id, [phraseId], enhanced);
+
+  } catch (error) {
+    console.error('AI enhancement failed:', error);
+    closeAIModal();
+    showToast('AI润色失败，请稍后重试');
+  }
+}
+
+/**
+ * 标记话术为有用
+ */
+function markPhraseHelpful(phraseId, buttonElement) {
+  buttonElement.classList.toggle('marked');
+  const isMarked = buttonElement.classList.contains('marked');
+
+  if (isMarked) {
+    showToast('❤️ 已标记为有用');
+  }
+}
+
+/**
+ * 返回场景选择
+ */
+function backToScenarios() {
+  document.getElementById('work-scenario-detail').style.display = 'none';
+  document.getElementById('work-scenarios-grid').style.display = 'grid';
+  currentScenario = null;
+  workPhrases = [];
+}
+
+/**
+ * 关闭AI模态框
+ */
+function closeAIModal() {
+  const modal = document.getElementById('ai-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+/**
+ * 复制AI润色后的文本
+ */
+async function copyAIEnhancedText() {
+  const textEl = document.getElementById('ai-enhanced-text');
+  if (\!textEl) return;
+
+  try {
+    await navigator.clipboard.writeText(textEl.textContent);
+    showToast('✅ 已复制到剪贴板');
+    closeAIModal();
+  } catch (error) {
+    console.error('Copy failed:', error);
+    showToast('复制失败，请手动选择文字复制');
+  }
+}
