@@ -457,3 +457,176 @@ async function getRecentFoodChoices(days = 7) {
   }
 }
 
+// ========================================
+// 工作烦恼
+// ========================================
+
+/**
+ * 获取所有工作烦恼场景
+ */
+async function getWorkScenarios() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('work_scenarios')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+
+    if (error) throw error;
+    console.log('✓ Loaded work scenarios:', data?.length || 0, 'items');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading work scenarios:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取指定场景的所有话术
+ */
+async function getWorkPhrases(scenarioId) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('work_phrases')
+      .select('*')
+      .eq('scenario_id', scenarioId)
+      .eq('is_active', true)
+      .order('phrase_type')
+      .order('display_order');
+
+    if (error) throw error;
+    console.log('✓ Loaded phrases for scenario:', scenarioId, data?.length || 0, 'phrases');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading work phrases:', error);
+    return [];
+  }
+}
+
+/**
+ * 保存工作烦恼记录
+ */
+async function saveWorkTroubleLog(scenarioId, phraseIds = [], aiResponse = null) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, log not saved');
+    return null;
+  }
+
+  try {
+    const { data, error} = await client
+      .from('work_trouble_logs')
+      .insert([{
+        session_id: getSessionId(),
+        scenario_id: scenarioId,
+        selected_phrase_ids: phraseIds,
+        ai_enhanced: !!aiResponse,
+        ai_response: aiResponse
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Work trouble log saved');
+    return data;
+  } catch (error) {
+    console.error('Error saving work trouble log:', error);
+    return null;
+  }
+}
+
+// ========================================
+// 去哪儿
+// ========================================
+
+/**
+ * 获取今日已选择的目的地
+ */
+async function getTodayDestinationChoice() {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    const { data, error } = await client
+      .from('destination_choices')
+      .select('*')
+      .eq('choice_date', today)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+    return data && data.length > 0 ? data[0] : null;
+  } catch (error) {
+    console.error('Error loading today destination choice:', error);
+    return null;
+  }
+}
+
+/**
+ * 保存目的地选择
+ */
+async function saveDestinationChoice(destinationName, isLocked = false) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, destination choice not saved');
+    return null;
+  }
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('destination_choices')
+      .insert([{
+        session_id: getSessionId(),
+        choice_date: today,
+        destination: destinationName,
+        is_locked: isLocked
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Destination choice saved:', destinationName);
+    return data;
+  } catch (error) {
+    console.error('Error saving destination choice:', error);
+    return null;
+  }
+}
+
+/**
+ * 解锁今日目的地选择
+ */
+async function unlockTodayDestination() {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, cannot unlock');
+    return false;
+  }
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { error } = await client
+      .from('destination_choices')
+      .delete()
+      .eq('choice_date', today);
+
+    if (error) throw error;
+    console.log('✓ Today destination unlocked');
+    return true;
+  } catch (error) {
+    console.error('Error unlocking destination:', error);
+    return false;
+  }
+}
+

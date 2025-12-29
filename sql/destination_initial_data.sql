@@ -1,0 +1,24 @@
+-- 去哪儿选项初始数据
+-- 创建日期：2025-12-29
+
+-- 注意：这个表不需要预填充数据
+-- 地点选项将直接在前端 JavaScript 中定义
+
+-- 地点列表（仅供参考）：
+-- 1. Westfield
+-- 2. Stanford Shopping Center
+-- 3. Great Mall
+-- 4. Santana Row
+-- 5. SF Chinatown
+-- 6. SF Hermes
+-- 7. Crumble Cookie
+-- 8. Whole Foods
+-- 9. Trader Joe's
+-- 10. Simply Cake
+-- 11. Uji Matcha
+-- 12. Cupertino Main Street
+-- 13. Fremont Food
+-- 14. Palo Alto Downtown
+-- 15. Hiking 1 - Rancho San Antonio
+-- 16. Hiking 2 - Stevens Creek
+-- 17. Hiking 3 - Villa Montalvo
