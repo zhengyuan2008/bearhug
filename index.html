@@ -45,6 +45,10 @@
         <span>🍱</span>
         <span>美食抉择</span>
       </button>
+      <button class="tab-button" data-tab="destination" id="tab-destination">
+        <span>📍</span>
+        <span>去哪儿</span>
+      </button>
       <button class="tab-button" data-tab="work-troubles" id="tab-work-troubles">
         <span>💼</span>
         <span>工作烦恼</span>
@@ -272,6 +276,68 @@
 
       </div>
       <!-- 美食抉择Tab内容结束 -->
+
+      <!-- 去哪儿Tab内容 -->
+      <div class="tab-content" id="content-destination">
+
+        <section class="glass-mini-card food-choice-section">
+          <h2 class="section-title">📍 今天去哪儿</h2>
+
+          <!-- 日期显示 -->
+          <div class="food-date-display">
+            <span class="food-date-label">📅</span>
+            <span class="food-date-value" id="destination-date">--</span>
+          </div>
+
+          <!-- 背景图 -->
+          <div class="food-choice-image">
+            <img src="images/Others/city1.avif" alt="目的地" />
+          </div>
+
+          <!-- 摇骰子动画区域 -->
+          <div class="dice-animation" id="destination-dice-animation" style="display: none;">
+            <div class="dice">🎲</div>
+            <p>正在为你抉择...</p>
+          </div>
+
+          <!-- 今日选择显示 -->
+          <div class="food-choice-result" id="destination-choice-result" style="display: none;">
+            <div class="choice-item">
+              <span class="choice-label">📍 目的地：</span>
+              <span class="choice-value" id="choice-destination">--</span>
+            </div>
+          </div>
+
+          <!-- 选择按钮 -->
+          <div class="food-choice-buttons" id="destination-choice-buttons">
+            <button class="btn-random-all" id="btn-random-destination">
+              🎲 随机选一个
+            </button>
+          </div>
+
+          <!-- 确认按钮 -->
+          <div class="food-confirm-section" id="destination-confirm-section" style="display: none;">
+            <button class="btn-confirm-choice" id="btn-confirm-destination">
+              ✅ 确认选择
+            </button>
+          </div>
+
+          <!-- 已锁定提示 -->
+          <div class="food-locked-section" id="destination-locked-section" style="display: none;">
+            <div class="locked-badge">
+              <span class="lock-icon">🔒</span>
+              <span>今日已确认</span>
+            </div>
+            <p class="locked-hint">想要重新选择？</p>
+            <button class="btn-unlock" id="btn-unlock-destination">
+              🔓 重新来过
+            </button>
+          </div>
+
+        </section>
+
+      </div>
+      <!-- 去哪儿Tab内容结束 -->
 
       <!-- 工作烦恼Tab内容 -->
       <div class="tab-content" id="content-work-troubles">

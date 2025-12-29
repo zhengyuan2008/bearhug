@@ -1950,6 +1950,11 @@ body::before {
   width: 100%;
 }
 
+/* Hide AI Polish Button (Disabled Feature) */
+.btn-ai-polish {
+  display: none !important;
+}
+
 /* Responsive */
 @media (max-width: 380px) {
   .work-troubles-scenarios {

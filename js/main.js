@@ -467,6 +467,11 @@ function switchTab(tabName) {
     initFoodTab();
   }
 
+  // 如果切换到去哪儿，初始化
+  if (tabName === 'destination') {
+    initDestinationTab();
+  }
+
   // 如果切换到工作烦恼，初始化
   if (tabName === 'work-troubles') {
     initWorkTroublesTab();
@@ -636,6 +641,25 @@ function bindEvents() {
   if (unlockButton) {
     unlockButton.onclick = requestUnlock;
     console.log('✓ 绑定了解锁按钮');
+  }
+
+  // 去哪儿Tab按钮
+  const randomDestinationButton = document.getElementById('btn-random-destination');
+  if (randomDestinationButton) {
+    randomDestinationButton.onclick = randomDestination;
+    console.log('✓ 绑定了随机目的地按钮');
+  }
+
+  const confirmDestinationButton = document.getElementById('btn-confirm-destination');
+  if (confirmDestinationButton) {
+    confirmDestinationButton.onclick = confirmDestinationChoice;
+    console.log('✓ 绑定了确认目的地按钮');
+  }
+
+  const unlockDestinationButton = document.getElementById('btn-unlock-destination');
+  if (unlockDestinationButton) {
+    unlockDestinationButton.onclick = unlockDestination;
+    console.log('✓ 绑定了解锁目的地按钮');
   }
 
   // Work Troubles Tab
@@ -1811,5 +1835,229 @@ async function copyAIEnhancedText() {
   } catch (error) {
     console.error('Copy failed:', error);
     showToast('复制失败，请手动选择文字复制');
+  }
+}
+
+// ========================================
+// 去哪儿功能
+// ========================================
+
+// 地点选项列表
+const destinationOptions = [
+  'Westfield',
+  'Stanford Shopping Center',
+  'Great Mall',
+  'Santana Row',
+  'SF Chinatown',
+  'SF Hermes',
+  'Crumble Cookie',
+  'Whole Foods',
+  "Trader Joe's",
+  'Simply Cake',
+  'Uji Matcha',
+  'Cupertino Main Street',
+  'Fremont Food',
+  'Palo Alto Downtown',
+  'Hiking 1 - Rancho San Antonio',
+  'Hiking 2 - Stevens Creek',
+  'Hiking 3 - Villa Montalvo'
+];
+
+let todayDestination = null;
+let isDestinationLocked = false;
+let tempDestination = null; // 临时选择，未确认前不保存数据库
+
+/**
+ * 初始化去哪儿Tab
+ */
+async function initDestinationTab() {
+  console.log('=== Initializing Destination Tab ===');
+
+  // 更新日期显示
+  updateDestinationDate();
+
+  // 检查今日选择状态
+  await checkTodayDestination();
+}
+
+/**
+ * 更新日期显示
+ */
+function updateDestinationDate() {
+  const dateElement = document.getElementById('destination-date');
+  if (!dateElement) return;
+
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
+  dateElement.textContent = `${month}月${day}日`;
+}
+
+/**
+ * 检查今日目的地状态
+ */
+async function checkTodayDestination() {
+  try {
+    // 从数据库加载今日选择
+    todayDestination = await getTodayDestinationChoice();
+
+    const resultDiv = document.getElementById('destination-choice-result');
+    const buttonsDiv = document.getElementById('destination-choice-buttons');
+    const confirmSection = document.getElementById('destination-confirm-section');
+    const lockedSection = document.getElementById('destination-locked-section');
+
+    if (todayDestination && todayDestination.is_locked) {
+      // 已锁定状态
+      isDestinationLocked = true;
+      displayDestinationChoice(todayDestination.destination);
+      if (resultDiv) resultDiv.style.display = 'block';
+      if (buttonsDiv) buttonsDiv.style.display = 'none';
+      if (confirmSection) confirmSection.style.display = 'none';
+      if (lockedSection) lockedSection.style.display = 'block';
+    } else if (todayDestination) {
+      // 已选择但未锁定
+      isDestinationLocked = false;
+      displayDestinationChoice(todayDestination.destination);
+      if (resultDiv) resultDiv.style.display = 'block';
+      if (buttonsDiv) buttonsDiv.style.display = 'flex';
+      if (confirmSection) confirmSection.style.display = 'block';
+      if (lockedSection) lockedSection.style.display = 'none';
+    } else {
+      // 还没有选择
+      isDestinationLocked = false;
+      if (resultDiv) resultDiv.style.display = 'none';
+      if (buttonsDiv) buttonsDiv.style.display = 'flex';
+      if (confirmSection) confirmSection.style.display = 'none';
+      if (lockedSection) lockedSection.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('检查今日目的地失败:', error);
+  }
+}
+
+/**
+ * 随机选择目的地
+ */
+async function randomDestination() {
+  if (isDestinationLocked) {
+    showToast('今日已确认，请先解锁');
+    return;
+  }
+
+  // 显示骰子动画
+  const diceDiv = document.getElementById('destination-dice-animation');
+  const resultDiv = document.getElementById('destination-choice-result');
+  const confirmSection = document.getElementById('destination-confirm-section');
+
+  if (diceDiv) diceDiv.style.display = 'block';
+  if (resultDiv) resultDiv.style.display = 'none';
+  if (confirmSection) confirmSection.style.display = 'none';
+
+  // 模拟摇骰子过程
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // 随机选择
+  const randomIndex = Math.floor(Math.random() * destinationOptions.length);
+  const selectedDestination = destinationOptions[randomIndex];
+
+  // 保存临时选择
+  tempDestination = selectedDestination;
+
+  // 隐藏骰子，显示结果
+  if (diceDiv) diceDiv.style.display = 'none';
+  displayDestinationChoice(selectedDestination);
+  if (resultDiv) resultDiv.style.display = 'block';
+  if (confirmSection) confirmSection.style.display = 'block';
+
+  console.log('✓ 随机选择目的地:', selectedDestination);
+}
+
+/**
+ * 显示目的地选择
+ */
+function displayDestinationChoice(destination) {
+  const destinationEl = document.getElementById('choice-destination');
+  if (destinationEl) {
+    destinationEl.textContent = destination || '--';
+  }
+}
+
+/**
+ * 确认目的地选择并锁定
+ */
+async function confirmDestinationChoice() {
+  const destinationToSave = tempDestination || (todayDestination ? todayDestination.destination : null);
+
+  if (!destinationToSave) {
+    showToast('请先进行选择');
+    return;
+  }
+
+  try {
+    // 保存到数据库并锁定
+    const saved = await saveDestinationChoice(destinationToSave, true);
+
+    if (saved) {
+      isDestinationLocked = true;
+      todayDestination = saved;
+      tempDestination = null;
+
+      // 更新UI显示锁定状态
+      const buttonsDiv = document.getElementById('destination-choice-buttons');
+      const confirmSection = document.getElementById('destination-confirm-section');
+      const lockedSection = document.getElementById('destination-locked-section');
+
+      if (buttonsDiv) buttonsDiv.style.display = 'none';
+      if (confirmSection) confirmSection.style.display = 'none';
+      if (lockedSection) lockedSection.style.display = 'block';
+
+      showToast('✅ 今日目的地已确认！');
+      console.log('✓ 目的地已锁定:', destinationToSave);
+    } else {
+      showToast('保存失败，请重试');
+    }
+  } catch (error) {
+    console.error('确认目的地失败:', error);
+    showToast('保存失败，请重试');
+  }
+}
+
+/**
+ * 解锁今日目的地
+ */
+async function unlockDestination() {
+  const confirmed = confirm('确定要重新选择吗？');
+  if (!confirmed) return;
+
+  try {
+    const unlocked = await unlockTodayDestination();
+
+    if (unlocked) {
+      isDestinationLocked = false;
+      todayDestination = null;
+      tempDestination = null;
+
+      // 更新UI
+      const resultDiv = document.getElementById('destination-choice-result');
+      const buttonsDiv = document.getElementById('destination-choice-buttons');
+      const confirmSection = document.getElementById('destination-confirm-section');
+      const lockedSection = document.getElementById('destination-locked-section');
+
+      if (resultDiv) resultDiv.style.display = 'none';
+      if (buttonsDiv) buttonsDiv.style.display = 'flex';
+      if (confirmSection) confirmSection.style.display = 'none';
+      if (lockedSection) lockedSection.style.display = 'none';
+
+      // 清空显示
+      displayDestinationChoice('--');
+
+      showToast('✅ 已解锁，可以重新选择');
+      console.log('✓ 目的地已解锁');
+    } else {
+      showToast('解锁失败，请重试');
+    }
+  } catch (error) {
+    console.error('解锁失败:', error);
+    showToast('解锁失败，请重试');
   }
 }

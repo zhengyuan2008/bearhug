@@ -168,7 +168,7 @@ FROM work_scenarios WHERE name = '工作没意义';
 INSERT INTO work_phrases (scenario_id, phrase_type, content, display_order, is_active)
 SELECT id, 'script', '对自己说：
 
-"意义不是被给予的，是我选择赋予的。我可以选择把这份工作当成'学习平台''经济支撑''过渡期'，而不是'全部人生'。"
+"意义不是被给予的，是我选择赋予的。我可以选择把这份工作当成「学习平台」「经济支撑」「过渡期」，而不是「全部人生」。"
 
 重新框定关系，夺回主动权。', 3, true
 FROM work_scenarios WHERE name = '工作没意义';

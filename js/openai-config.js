@@ -13,10 +13,9 @@ const OPENAI_CONFIG = {
     // false = 使用Mock数据（默认）
     useRealAPI: true,  // ✅ 开发分支：启用本地API测试
 
-    // ⚠️ 仅用于本地调试！从环境变量或本地配置文件读取API key
-    // 本地开发时，请在浏览器 Console 中设置：
-    // localStorage.setItem('openai_api_key', 'your-api-key-here')
-    apiKey: '',
+    // ⚠️ 仅用于本地调试！请勿提交到远程仓库
+    // 已配置本地调试API key
+    apiKey: 'YOUR_OPENAI_API_KEY_HERE',
 
     // OpenAI API配置
     endpoint: 'https://api.openai.com/v1/responses',
