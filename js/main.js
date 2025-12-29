@@ -1555,7 +1555,7 @@ async function initWorkTroublesTab() {
  */
 function renderScenarioGrid() {
   const grid = document.getElementById('work-scenarios-grid');
-  if (\!grid) return;
+  if (!grid) return;
 
   if (workScenarios.length === 0) {
     grid.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">暂无可用场景</p>';
@@ -1588,7 +1588,7 @@ async function selectScenario(scenarioId) {
 
   // Find scenario
   currentScenario = workScenarios.find(s => s.id === scenarioId);
-  if (\!currentScenario) {
+  if (!currentScenario) {
     showToast('场景加载失败');
     return;
   }
@@ -1619,7 +1619,7 @@ async function selectScenario(scenarioId) {
  */
 function renderPhraseCategories() {
   const container = document.getElementById('phrase-categories-container');
-  if (\!container) return;
+  if (!container) return;
 
   // Group phrases by type
   const phrasesByType = {
@@ -1716,7 +1716,7 @@ function toggleCategory(headerElement) {
  */
 async function copyPhrase(phraseId) {
   const phrase = workPhrases.find(p => p.id === phraseId);
-  if (\!phrase) return;
+  if (!phrase) return;
 
   try {
     await navigator.clipboard.writeText(phrase.content);
@@ -1732,7 +1732,7 @@ async function copyPhrase(phraseId) {
  */
 async function requestAIPolish(phraseId) {
   const phrase = workPhrases.find(p => p.id === phraseId);
-  if (\!phrase || \!currentScenario) return;
+  if (!phrase || !currentScenario) return;
 
   // Show modal
   const modal = document.getElementById('ai-modal');
@@ -1802,7 +1802,7 @@ function closeAIModal() {
  */
 async function copyAIEnhancedText() {
   const textEl = document.getElementById('ai-enhanced-text');
-  if (\!textEl) return;
+  if (!textEl) return;
 
   try {
     await navigator.clipboard.writeText(textEl.textContent);

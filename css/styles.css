@@ -208,7 +208,8 @@ body::before {
    ======================================== */
 
 .tab-navigation {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-bottom: 20px;
   padding: 4px;
@@ -218,7 +219,6 @@ body::before {
 }
 
 .tab-button {
-  flex: 1;
   padding: 10px 12px;
   border: none;
   border-radius: 12px;
