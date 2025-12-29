@@ -223,7 +223,7 @@ async function enhancePhraseWithAI(originalPhrase, scenarioName, scenarioDesc) {
       })
     });
 
-    if (\!response.ok) {
+    if (!response.ok) {
       throw new Error(`Function request failed: ${response.status}`);
     }
 
@@ -250,7 +250,7 @@ async function callOpenAIForPhraseEnhancement(originalPhrase, scenarioName, scen
     const config = OPENAI_CONFIG.localDevelopment;
     const apiKey = localStorage.getItem('openai_api_key') || config.apiKey;
 
-    if (\!apiKey) {
+    if (!apiKey) {
       console.warn('⚠️ API Key未配置');
       return getMockEnhancedPhrase(originalPhrase);
     }
@@ -272,7 +272,7 @@ async function callOpenAIForPhraseEnhancement(originalPhrase, scenarioName, scen
       })
     });
 
-    if (\!response.ok) {
+    if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', response.status, errorText);
       throw new Error(`API request failed: ${response.status}`);
