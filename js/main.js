@@ -633,6 +633,20 @@ function bindEvents() {
     console.log('✓ 绑定了关闭心情回顾按钮');
   }
 
+  // 护理指南按钮
+  const healthGuideButton = document.getElementById('btn-health-guide');
+  if (healthGuideButton) {
+    healthGuideButton.onclick = toggleHealthGuide;
+    console.log('✓ 绑定了护理指南按钮');
+  }
+
+  // 关闭护理指南按钮
+  const closeHealthGuideButton = document.getElementById('btn-close-guide');
+  if (closeHealthGuideButton) {
+    closeHealthGuideButton.onclick = closeHealthGuide;
+    console.log('✓ 绑定了关闭护理指南按钮');
+  }
+
   // 历史上的今天按钮
   const historyTodayButton = document.getElementById('btn-history-today');
   if (historyTodayButton) {
@@ -727,6 +741,66 @@ function bindEvents() {
   }
 
   console.log('事件绑定完成！');
+}
+
+// ========================================
+// 心情回顾功能
+// ========================================
+
+/**
+ * 切换护理指南显示
+ */
+function toggleHealthGuide() {
+  const content = document.getElementById('health-guide-content');
+  if (!content) return;
+
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    // 绑定分类展开事件
+    bindHealthCategoryEvents();
+  } else {
+    content.style.display = 'none';
+  }
+}
+
+/**
+ * 关闭护理指南
+ */
+function closeHealthGuide() {
+  const content = document.getElementById('health-guide-content');
+  if (content) {
+    content.style.display = 'none';
+  }
+}
+
+/**
+ * 绑定护理指南分类事件
+ */
+function bindHealthCategoryEvents() {
+  document.querySelectorAll('.health-category-header').forEach(header => {
+    // 移除旧的事件监听器（避免重复绑定）
+    header.replaceWith(header.cloneNode(true));
+  });
+
+  // 重新获取并绑定
+  document.querySelectorAll('.health-category-header').forEach(header => {
+    header.onclick = () => toggleHealthCategory(header);
+  });
+}
+
+/**
+ * 切换护理指南分类展开/收起
+ */
+function toggleHealthCategory(headerElement) {
+  const content = headerElement.nextElementSibling;
+
+  if (content.classList.contains('expanded')) {
+    content.classList.remove('expanded');
+    headerElement.classList.remove('expanded');
+  } else {
+    content.classList.add('expanded');
+    headerElement.classList.add('expanded');
+  }
 }
 
 // ========================================
