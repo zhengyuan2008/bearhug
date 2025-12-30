@@ -431,6 +431,45 @@ async function saveFoodChoice(foodName, drinkName = null, isLocked = false) {
 /**
  * 获取最近的美食选择历史（不包括今天）
  */
+/**
+ * 获取本周的美食选择历史（每周一重置）
+ */
+async function getThisWeekFoodChoices() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const today = new Date();
+
+    // 计算本周一的日期
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday算作上周末
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysFromMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const mondayStr = monday.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('food_choices')
+      .select('*')
+      .gte('choice_date', mondayStr)  // >= 本周一
+      .lt('choice_date', todayStr)    // < 今天（排除今天）
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    console.log(`✓ 获取本周历史记录（${mondayStr}至今，不含今天）:`, data?.length || 0, '条');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading this week food choices:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取过去N天的美食选择历史（保留用于其他功能）
+ */
 async function getRecentFoodChoices(days = 7) {
   const client = getSupabase();
   if (!client) return [];
@@ -629,4 +668,41 @@ async function unlockTodayDestination() {
     return false;
   }
 }
+
+/**
+ * 获取本周的目的地选择历史（每周一重置）
+ */
+async function getThisWeekDestinations() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const today = new Date();
+
+    // 计算本周一的日期
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday算作上周末
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysFromMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const mondayStr = monday.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('destination_choices')
+      .select('*')
+      .gte('choice_date', mondayStr)  // >= 本周一
+      .lt('choice_date', todayStr)    // < 今天（排除今天）
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    console.log(`✓ 获取本周目的地历史（${mondayStr}至今，不含今天）:`, data?.length || 0, '条');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading this week destinations:', error);
+    return [];
+  }
+}
+
 

@@ -1367,12 +1367,13 @@ function randomPick(items, excludeRecent = []) {
 }
 
 /**
- * 获取最近选择的食物名单（用于避免重复）
+ * 获取本周已选择的食物名单（用于避免重复）每周一重置
  */
-async function getRecentChoiceNames(days = 7) {
-  const recentChoices = await getRecentFoodChoices(days);
-  const foodNames = recentChoices.map(c => c.food_name).filter(Boolean);
-  const drinkNames = recentChoices.map(c => c.drink_name).filter(Boolean);
+async function getThisWeekChoiceNames() {
+  const thisWeekChoices = await getThisWeekFoodChoices();
+  const foodNames = thisWeekChoices.map(c => c.food_name).filter(Boolean);
+  const drinkNames = thisWeekChoices.map(c => c.drink_name).filter(Boolean);
+  console.log('✓ 本周已选择:', { foodNames, drinkNames });
   return { foodNames, drinkNames };
 }
 
@@ -1384,7 +1385,7 @@ async function randomFullMeal() {
   showDiceAnimation();
 
   try {
-    const recent = await getRecentChoiceNames(7);
+    const recent = await getThisWeekChoiceNames();
 
     const food = randomPick(foodOptions.foods, recent.foodNames);
     const drink = randomPick(foodOptions.drinks, recent.drinkNames);
@@ -1428,7 +1429,7 @@ async function randomFood() {
   showDiceAnimation();
 
   try {
-    const recent = await getRecentChoiceNames(7);
+    const recent = await getThisWeekChoiceNames();
     const food = randomPick(foodOptions.foods, recent.foodNames);
 
     if (!food) {
@@ -1473,7 +1474,7 @@ async function randomDrink() {
   showDiceAnimation();
 
   try {
-    const recent = await getRecentChoiceNames(7);
+    const recent = await getThisWeekChoiceNames();
     const drink = randomPick(foodOptions.drinks, recent.drinkNames);
 
     if (!drink) {
@@ -1953,23 +1954,43 @@ async function randomDestination() {
   if (resultDiv) resultDiv.style.display = 'none';
   if (confirmSection) confirmSection.style.display = 'none';
 
-  // 模拟摇骰子过程
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  try {
+    // 获取本周已选择的目的地（避免重复）
+    const thisWeekChoices = await getThisWeekDestinations();
+    const selectedDestinations = thisWeekChoices.map(c => c.destination).filter(Boolean);
+    console.log('✓ 本周已选择目的地:', selectedDestinations);
 
-  // 随机选择
-  const randomIndex = Math.floor(Math.random() * destinationOptions.length);
-  const selectedDestination = destinationOptions[randomIndex];
+    // 过滤掉本周已选择的
+    const availableDestinations = destinationOptions.filter(d => !selectedDestinations.includes(d));
 
-  // 保存临时选择
-  tempDestination = selectedDestination;
+    if (availableDestinations.length === 0) {
+      // 如果所有地点都选过了，重置为全部可选
+      console.log('⚠️ 本周所有地点都选过了，重置为全部可选');
+      availableDestinations.push(...destinationOptions);
+    }
 
-  // 隐藏骰子，显示结果
-  if (diceDiv) diceDiv.style.display = 'none';
-  displayDestinationChoice(selectedDestination);
-  if (resultDiv) resultDiv.style.display = 'block';
-  if (confirmSection) confirmSection.style.display = 'block';
+    // 等待1秒让动画播放
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-  console.log('✓ 随机选择目的地:', selectedDestination);
+    // 从可用选项中随机选择
+    const randomIndex = Math.floor(Math.random() * availableDestinations.length);
+    const selectedDestination = availableDestinations[randomIndex];
+
+    // 保存临时选择
+    tempDestination = selectedDestination;
+
+    // 隐藏骰子，显示结果
+    if (diceDiv) diceDiv.style.display = 'none';
+    displayDestinationChoice(selectedDestination);
+    if (resultDiv) resultDiv.style.display = 'block';
+    if (confirmSection) confirmSection.style.display = 'block';
+
+    console.log('✓ 随机选择目的地:', selectedDestination);
+  } catch (error) {
+    console.error('随机选择失败:', error);
+    if (diceDiv) diceDiv.style.display = 'none';
+    showToast('选择失败，请稍后重试');
+  }
 }
 
 /**
