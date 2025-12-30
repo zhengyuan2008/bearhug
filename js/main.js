@@ -3,6 +3,44 @@
    ======================================== */
 
 // ========================================
+// 照片池配置
+// ========================================
+
+const photoPool = [
+  { src: 'images/工作🐰.png', label: '工作中的胖🐰' },
+  { src: 'images/🐻柯南.jpeg', label: '🐻柯南' },
+  { src: 'images/双猫.jpeg', label: '双猫咪' },
+  { src: 'images/双猫凝视.jpeg', label: '双猫凝视' },
+  { src: 'images/双猫猫树.jpeg', label: '猫树上的双猫' },
+  { src: 'images/大阪城🐻.jpeg', label: '大阪城🐻' },
+  { src: 'images/恶魔岛🐰🐻.jpeg', label: '恶魔岛🐰🐻' },
+  { src: 'images/清水寺🐰🐻.jpeg', label: '清水寺🐰🐻' },
+  { src: 'images/妹妹猫凝视.jpeg', label: '妹妹猫凝视' },
+  { src: 'images/东大寺🐰🐻.jpeg', label: '东大寺🐰🐻' },
+  { src: 'images/马里奥🐰🐻.jpeg', label: '马里奥🐰🐻' },
+  { src: 'images/胖🐰摄影技巧.jpeg', label: '胖🐰的摄影技巧' },
+  { src: 'images/胜尾寺.jpeg', label: '胜尾寺' },
+  { src: 'images/妹妹猫握手.jpeg', label: '妹妹猫握手' },
+  { src: 'images/妹妹猫勇敢.jpeg', label: '勇敢的妹妹猫' },
+  { src: 'images/胜尾寺🐻.jpeg', label: '胜尾寺🐻' },
+  { src: 'images/🐻和达摩.jpeg', label: '🐻和达摩' },
+  { src: 'images/格力高🐻.jpeg', label: '格力高🐻' },
+  { src: 'images/🐰和鹿.jpeg', label: '🐰和小鹿' },
+  { src: 'images/妹妹和玩偶.jpeg', label: '妹妹和玩偶' },
+  { src: 'images/大阪格力高🐰🐻.jpeg', label: '大阪格力高🐰🐻' },
+  { src: 'images/漫画婚礼.png', label: '漫画婚礼' },
+  { src: 'images/章鱼烧.png', label: '章鱼烧' },
+  { src: 'images/平等院.png', label: '平等院' },
+  { src: 'images/漫画偷吃.png', label: '漫画偷吃' },
+  { src: 'images/阳光🐰7.jpeg', label: '阳光🐰' },
+  { src: 'images/小A蜷缩.jpeg', label: '蜷缩的小A' },
+  { src: 'images/小A猫.jpeg', label: '小A猫' },
+  { src: 'images/小🐻和小A.png', label: '小🐻和小A' }
+];
+
+let currentPhotoIndex = 0;
+
+// ========================================
 // 工具函数
 // ========================================
 
@@ -131,23 +169,24 @@ function savePeriodData(data) {
  * 更新照片和消息
  */
 function updatePhotoAndMessage(messageArray = null) {
-  const photo = getRandomItem(CONFIG.photos);
+  // 使用photoPool随机选择照片
+  const photo = getRandomItem(photoPool);
   const message = getRandomItem(messageArray || CONFIG.messagesGeneral);
-  
+
   if (photo) {
     const photoElement = document.getElementById('hug-photo');
     const labelElement = document.getElementById('photo-label');
-    
+
     if (photoElement) {
       photoElement.src = photo.src;
       photoElement.alt = photo.label;
     }
-    
+
     if (labelElement) {
       labelElement.textContent = photo.label;
     }
   }
-  
+
   if (message) {
     const messageElement = document.getElementById('main-message');
     if (messageElement) {
