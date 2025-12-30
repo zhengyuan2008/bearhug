@@ -1034,6 +1034,47 @@ body::before {
   margin: 0;
 }
 
+/* 穴位图片 */
+.acupoint-images {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0 16px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.acupoint-img {
+  width: 48%;
+  max-width: 200px;
+  height: auto;
+  border-radius: 12px;
+  border: 2px solid rgba(236, 72, 153, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 缓解动作图片 */
+.exercise-images {
+  margin: 12px 0 16px 0;
+  text-align: center;
+}
+
+.exercise-img {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 12px;
+  border: 2px solid rgba(168, 85, 247, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 380px) {
+  .acupoint-img {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 /* ========================================
    响应式设计
    ======================================== */
