@@ -1034,7 +1034,7 @@ body::before {
   margin: 0;
 }
 
-/* 穴位图片 */
+/* 穴位图片 - 并排显示（已废弃，保留用于兼容） */
 .acupoint-images {
   display: flex;
   gap: 12px;
@@ -1046,6 +1046,21 @@ body::before {
 .acupoint-img {
   width: 48%;
   max-width: 200px;
+  height: auto;
+  border-radius: 12px;
+  border: 2px solid rgba(236, 72, 153, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 穴位图片 - 单张居中显示 */
+.acupoint-images-single {
+  margin: 12px 0;
+  text-align: center;
+}
+
+.acupoint-img-single {
+  width: 100%;
+  max-width: 300px;
   height: auto;
   border-radius: 12px;
   border: 2px solid rgba(236, 72, 153, 0.2);
@@ -1071,6 +1086,10 @@ body::before {
 @media (max-width: 380px) {
   .acupoint-img {
     width: 100%;
+    max-width: 100%;
+  }
+
+  .acupoint-img-single {
     max-width: 100%;
   }
 }
