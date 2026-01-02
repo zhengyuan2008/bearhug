@@ -26,9 +26,6 @@
     "node-fetch": "^2.7.0",
     "dotenv": "^16.4.5"
   },
-  "devDependencies": {
-    "@netlify/plugin-scheduled-functions": "^1.0.0"
-  },
   "engines": {
     "node": ">=14.0.0"
   }

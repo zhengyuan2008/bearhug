@@ -2,16 +2,13 @@
  * Netlify Scheduled Function - Daily Mindset Article Generation
  *
  * Schedule: Every day at midnight (00:00 UTC)
- * Netlify配置: netlify.toml中添加：
- *
- * [[plugins]]
- *   package = "@netlify/plugin-scheduled-functions"
- *
- * [functions."daily-mindset-generation"]
- *   schedule = "0 0 * * *"
+ * 使用 Netlify 原生 scheduled functions
  */
 
 const { generateTodayArticles, expireYesterdayArticles } = require('../../scripts/generate-mindset-articles');
+
+// 配置定时任务调度
+exports.schedule = "0 0 * * *";  // Cron格式：每天UTC时间00:00执行
 
 exports.handler = async (event, context) => {
   console.log('=== Netlify Scheduled Function: Daily Mindset Generation ===');

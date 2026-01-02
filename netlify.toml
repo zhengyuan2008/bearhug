@@ -10,13 +10,10 @@
   # Functions 目录
   directory = ".netlify/functions"
 
-# 定时函数插件
-[[plugins]]
-  package = "@netlify/plugin-scheduled-functions"
-
 # 定时函数配置：每日凌晨12点生成心态文章
-[functions."daily-mindset-generation"]
-  schedule = "0 0 * * *"  # Cron格式：每天UTC时间00:00执行
+# 使用 Netlify 原生 scheduled functions
+# 在 .netlify/functions 目录中创建函数文件
+# 在函数文件中使用 schedule 导出来配置执行时间
 
 # 环境变量（需要在Netlify Dashboard配置实际值）
 # 必需的环境变量：
