@@ -1,0 +1,35 @@
+{
+  "name": "bearhug",
+  "version": "1.0.0",
+  "description": "🐻 Bearhug - Your Daily Mental Wellness Companion",
+  "main": "index.html",
+  "type": "commonjs",
+  "scripts": {
+    "test:env": "node -e \"console.log(process.env.OPENAI_API_KEY ? '✅ API Key loaded' : '❌ Missing API Key')\"",
+    "generate:mindset": "node scripts/generate-mindset-articles.js",
+    "generate:january": "node scripts/generate-january-stories-claude.js",
+    "populate:history:test": "node scripts/populate-history-stories.js --month=1 --dry-run",
+    "populate:history": "node scripts/populate-history-stories.js --month=1 --stories=2",
+    "populate:history:all": "node scripts/populate-history-stories.js --stories=2",
+    "populate:history:force": "node scripts/populate-history-stories.js --stories=2 --force"
+  },
+  "keywords": [
+    "mental-health",
+    "wellness",
+    "mindfulness",
+    "supabase",
+    "openai"
+  ],
+  "author": "Bearhug Team",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.7.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@netlify/plugin-scheduled-functions": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -3,6 +3,97 @@
    ======================================== */
 
 // ========================================
+// 密码保护
+// ========================================
+
+const CORRECT_PASSWORD = '920229'; // 密码
+const AUTH_KEY = 'bearHugAuth'; // localStorage key
+
+/**
+ * 检查是否已授权
+ */
+function checkAuth() {
+  const isAuthed = localStorage.getItem(AUTH_KEY);
+  if (isAuthed === 'true') {
+    unlockContent();
+  }
+}
+
+/**
+ * 验证密码
+ */
+function verifyPassword() {
+  const input = document.getElementById('password-input');
+  const errorMsg = document.getElementById('password-error');
+  const password = input.value.trim();
+
+  if (password === CORRECT_PASSWORD) {
+    // 密码正确，保存到localStorage
+    localStorage.setItem(AUTH_KEY, 'true');
+    unlockContent();
+  } else {
+    // 密码错误，显示错误信息
+    if (errorMsg) {
+      errorMsg.style.display = 'block';
+    }
+    input.value = '';
+    input.focus();
+
+    // 3秒后隐藏错误信息
+    setTimeout(() => {
+      if (errorMsg) errorMsg.style.display = 'none';
+    }, 3000);
+  }
+}
+
+/**
+ * 解锁内容
+ */
+function unlockContent() {
+  const overlay = document.getElementById('password-overlay');
+  const mainContent = document.getElementById('main-content');
+
+  if (overlay) {
+    overlay.classList.add('hidden');
+  }
+
+  if (mainContent) {
+    mainContent.classList.add('unlocked');
+  }
+
+  console.log('✓ Content unlocked');
+}
+
+/**
+ * 绑定密码输入事件
+ */
+function bindPasswordEvents() {
+  const submitBtn = document.getElementById('btn-password-submit');
+  const passwordInput = document.getElementById('password-input');
+
+  if (submitBtn) {
+    submitBtn.onclick = verifyPassword;
+  }
+
+  if (passwordInput) {
+    // 回车键提交
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        verifyPassword();
+      }
+    });
+    // 自动聚焦
+    passwordInput.focus();
+  }
+}
+
+// 页面加载时检查授权状态
+document.addEventListener('DOMContentLoaded', () => {
+  bindPasswordEvents();
+  checkAuth();
+});
+
+// ========================================
 // 照片池配置
 // ========================================
 
@@ -516,6 +607,11 @@ function switchTab(tabName) {
     initWorkTroublesTab();
   }
 
+  // 如果切换到搞好心态，初始化
+  if (tabName === 'mindset') {
+    initMindsetTab();
+  }
+
   console.log('=== Tab切换完成 ===');
 }
 
@@ -709,6 +805,12 @@ function bindEvents() {
     console.log('✓ 绑定了确认目的地按钮');
   }
 
+  const rerollDestinationButton = document.getElementById('btn-reroll-destination');
+  if (rerollDestinationButton) {
+    rerollDestinationButton.onclick = randomDestination;
+    console.log('✓ 绑定了重新随机目的地按钮');
+  }
+
   const unlockDestinationButton = document.getElementById('btn-unlock-destination');
   if (unlockDestinationButton) {
     unlockDestinationButton.onclick = unlockDestination;
@@ -738,6 +840,67 @@ function bindEvents() {
   if (btnCopyAI) {
     btnCopyAI.onclick = copyAIEnhancedText;
     console.log('✓ 绑定了AI复制按钮');
+  }
+
+  // Mindset Tab
+  const btnRefreshMindset = document.getElementById('btn-refresh-mindset');
+  if (btnRefreshMindset) {
+    btnRefreshMindset.onclick = refreshMindsetArticle;
+    console.log('✓ 绑定了心态文章刷新按钮');
+  }
+
+  const btnRetryMindset = document.getElementById('btn-retry-mindset');
+  if (btnRetryMindset) {
+    btnRetryMindset.onclick = retryLoadMindsetArticle;
+    console.log('✓ 绑定了心态文章重试按钮');
+  }
+
+  // 零食拦截记录
+  const btnRecordInterception = document.getElementById('btn-record-interception');
+  if (btnRecordInterception) {
+    btnRecordInterception.onclick = recordSnackInterception;
+    console.log('✓ 绑定了零食拦截记录按钮');
+  }
+
+  const btnCancelInterception = document.getElementById('btn-cancel-interception');
+  if (btnCancelInterception) {
+    btnCancelInterception.onclick = cancelSnackInterception;
+    console.log('✓ 绑定了取消拦截按钮');
+  }
+
+  const btnShowSnackHistory = document.getElementById('btn-show-snack-history');
+  if (btnShowSnackHistory) {
+    btnShowSnackHistory.onclick = showSnackHistory;
+    console.log('✓ 绑定了查看拦截历史按钮');
+  }
+
+  const btnCloseSnackHistory = document.getElementById('btn-close-snack-history');
+  if (btnCloseSnackHistory) {
+    btnCloseSnackHistory.onclick = closeSnackHistory;
+    console.log('✓ 绑定了关闭拦截历史按钮');
+  }
+
+  // 自定义目的地
+  const btnAddDestination = document.getElementById('btn-add-destination');
+  if (btnAddDestination) {
+    btnAddDestination.onclick = addCustomDestinationHandler;
+    console.log('✓ 绑定了添加目的地按钮');
+  }
+
+  const customDestinationInput = document.getElementById('custom-destination-input');
+  if (customDestinationInput) {
+    customDestinationInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        addCustomDestinationHandler();
+      }
+    });
+    console.log('✓ 绑定了目的地输入框回车键');
+  }
+
+  const btnToggleDestinations = document.getElementById('btn-toggle-destinations');
+  if (btnToggleDestinations) {
+    btnToggleDestinations.onclick = toggleCustomDestinationsList;
+    console.log('✓ 绑定了目的地列表展开/收起按钮');
   }
 
   console.log('事件绑定完成！');
@@ -1024,14 +1187,14 @@ function cacheStory(month, day, story) {
   localStorage.setItem(cacheKey, JSON.stringify({ year, story }));
 }
 
-// 全局加载状态标记
-let isLoadingHistoryStory = false;
-let currentLoadingPromise = null;
+// 全局状态 - 历史故事索引
+let currentHistoryStoryIndex = 0;
+let todayHistoryStories = [];
 
 /**
- * 加载历史上的今天（从缓存或API）
+ * 加载历史上的今天（从数据库读取）
  */
-async function loadHistoryToday(forceRefresh = false) {
+async function loadHistoryToday() {
   const storyElement = document.getElementById('history-today-story');
   if (!storyElement) return;
 
@@ -1040,93 +1203,49 @@ async function loadHistoryToday(forceRefresh = false) {
   const month = today.getMonth() + 1;
   const day = today.getDate();
 
-  // 如果不是强制刷新，先检查缓存
-  if (!forceRefresh) {
-    const cachedStory = getCachedStory(month, day);
-    if (cachedStory) {
-      console.log('📖 使用缓存的历史故事');
-      displayHistoryStory(cachedStory, month, day);
+  // 显示加载状态
+  storyElement.innerHTML = '<p class="history-today-loading">正在加载历史故事...</p>';
+
+  try {
+    // 从数据库读取今日所有故事
+    todayHistoryStories = await getTodayHistoryStories();
+
+    if (!todayHistoryStories || todayHistoryStories.length === 0) {
+      storyElement.innerHTML = '<p class="history-today-error">今日暂无历史故事</p>';
       return;
     }
 
-    // 如果正在预加载，等待预加载完成
-    if (isLoadingHistoryStory && currentLoadingPromise) {
-      console.log('⏳ 正在预加载中，等待完成...');
-      storyElement.innerHTML = '<p class="history-today-loading">正在加载中...</p>';
-      try {
-        await currentLoadingPromise;
-        // 预加载完成后，从缓存读取
-        const cachedStory = getCachedStory(month, day);
-        if (cachedStory) {
-          displayHistoryStory(cachedStory, month, day);
-        } else {
-          storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
-        }
-        return;  // 无论成功失败都返回，不再继续执行
-      } catch (error) {
-        console.error('预加载失败:', error);
-        storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
-        return;  // 失败后也返回，不再继续
-      }
-    }
+    console.log(`✓ Loaded ${todayHistoryStories.length} stories for ${month}/${day}`);
+
+    // 重置索引为0，显示第一个故事
+    currentHistoryStoryIndex = 0;
+    displayHistoryStory(todayHistoryStories[currentHistoryStoryIndex], month, day);
+
+  } catch (error) {
+    console.error('加载历史故事失败:', error);
+    storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
   }
-
-  // 如果正在加载且是强制刷新，先取消之前的加载（强制刷新优先级高）
-  if (isLoadingHistoryStory && forceRefresh) {
-    console.log('🔄 强制刷新，取消之前的加载');
-    // 标记会在新的Promise中重新设置
-  }
-
-  // 显示加载中（带时间提示）
-  if (forceRefresh) {
-    storyElement.innerHTML = '<p class="history-today-loading">🔄 正在寻找新故事...<br><small>可能需要10-60秒，请稍候</small></p>';
-  } else {
-    storyElement.innerHTML = '<p class="history-today-loading">AI正在为你讲故事...<br><small>首次加载可能需要10-60秒</small></p>';
-  }
-
-  // 设置加载状态
-  isLoadingHistoryStory = true;
-  currentLoadingPromise = (async () => {
-    try {
-      // 调用AI生成故事
-      const story = await generateHistoryStory(month, day);
-
-      // 保存到缓存
-      cacheStory(month, day, story);
-
-      // 显示故事
-      displayHistoryStory(story, month, day);
-
-    } catch (error) {
-      console.error('加载历史故事失败:', error);
-      storyElement.innerHTML = '<p class="history-today-error">加载失败，请稍后重试</p>';
-      throw error;
-    } finally {
-      // 清除加载状态
-      isLoadingHistoryStory = false;
-      currentLoadingPromise = null;
-    }
-  })();
-
-  await currentLoadingPromise;
 }
 
 /**
  * 显示历史故事
  */
-function displayHistoryStory(story, month, day) {
+function displayHistoryStory(storyObj, month, day) {
   const storyElement = document.getElementById('history-today-story');
   if (!storyElement) return;
 
   // 格式化日期
   const dateStr = `${month}月${day}日`;
 
+  // 从数据库对象中提取故事内容
+  const storyContent = storyObj.story || storyObj;
+
   // 处理故事文本（保留换行）
   let formattedStory;
 
-  if (typeof story === 'string') {
+  if (typeof storyContent === 'string') {
     // 如果是字符串，正常处理换行
-    formattedStory = story
+    formattedStory = storyContent
       .split('\n')
       .map(paragraph => paragraph.trim())
       .filter(paragraph => paragraph.length > 0)
@@ -1134,68 +1253,59 @@ function displayHistoryStory(story, month, day) {
       .join('');
   } else {
     // 如果不是字符串，直接显示
-    console.warn('Story不是字符串类型:', typeof story);
-    formattedStory = `<p>${String(story)}</p>`;
+    console.warn('Story content不是字符串类型:', typeof storyContent);
+    formattedStory = `<p>${String(storyContent)}</p>`;
+  }
+
+  // 计算当前故事的显示索引（1-based）
+  const storyNumber = currentHistoryStoryIndex + 1;
+  const totalStories = todayHistoryStories.length;
+
+  // 生成按钮文本
+  let buttonHTML = '';
+  if (totalStories > 1) {
+    buttonHTML = `
+      <button class="btn-refresh-story" id="btn-refresh-story" onclick="showNextHistoryStory()">
+        📖 另一个故事 (${storyNumber} / ${totalStories})
+      </button>
+    `;
   }
 
   storyElement.innerHTML = `
     <h4>${dateStr}</h4>
     ${formattedStory}
-    <button class="btn-refresh-story" id="btn-refresh-story" onclick="refreshHistoryStory()">
-      🔄 换一个故事
-    </button>
+    ${buttonHTML}
   `;
 }
 
 /**
- * 刷新历史故事（重新调用API）
+ * 显示下一个历史故事（循环切换）
  */
-async function refreshHistoryStory() {
-  await loadHistoryToday(true);  // forceRefresh = true
-}
+function showNextHistoryStory() {
+  if (!todayHistoryStories || todayHistoryStories.length === 0) {
+    console.warn('No stories available');
+    return;
+  }
 
-/**
- * 预加载历史上的今天（页面加载时后台执行）
- */
-async function preloadHistoryStory() {
   const today = new Date();
   const month = today.getMonth() + 1;
   const day = today.getDate();
 
-  // 检查是否已有缓存
-  const cachedStory = getCachedStory(month, day);
-  if (cachedStory) {
-    console.log('✅ 历史故事已缓存，无需预加载');
-    return;
-  }
+  // 循环到下一个故事
+  currentHistoryStoryIndex = (currentHistoryStoryIndex + 1) % todayHistoryStories.length;
 
-  // 如果已经在加载中，不要重复预加载
-  if (isLoadingHistoryStory) {
-    console.log('⚠️ 已经在加载中，跳过预加载');
-    return;
-  }
+  console.log(`Showing story ${currentHistoryStoryIndex + 1} of ${todayHistoryStories.length}`);
 
-  // 后台加载故事
-  console.log('🔄 开始预加载历史上的今天...');
+  // 显示下一个故事
+  displayHistoryStory(todayHistoryStories[currentHistoryStoryIndex], month, day);
+}
 
-  // 设置加载状态和Promise（与loadHistoryToday共享）
-  isLoadingHistoryStory = true;
-  currentLoadingPromise = (async () => {
-    try {
-      const story = await generateHistoryStory(month, day);
-      cacheStory(month, day, story);
-      console.log('✅ 历史故事预加载完成');
-    } catch (error) {
-      console.error('❌ 预加载历史故事失败:', error);
-      throw error;
-    } finally {
-      isLoadingHistoryStory = false;
-      currentLoadingPromise = null;
-    }
-  })();
-
-  // 静默失败，不阻塞页面初始化
-  await currentLoadingPromise.catch(() => {});
+/**
+ * 预加载历史上的今天（已弃用 - 使用数据库后不再需要）
+ */
+function preloadHistoryStory() {
+  // 数据库版本无需预加载
+  console.log('✅ 历史故事从数据库读取，无需预加载');
 }
 
 // ========================================
@@ -1207,10 +1317,22 @@ let todayChoice = null;
 let isChoiceLocked = false;
 let tempChoice = null; // 临时选择，未确认前不保存数据库
 
+// Snack Interception State
+let todaySnackInterception = null;
+let snackHistory = [];
+
+// Custom Destinations State
+let customDestinations = [];
+
 // Work Troubles State
 let workScenarios = [];
 let currentScenario = null;
 let workPhrases = [];
+
+// Mindset State
+let mindsetTopics = [];
+let currentMindsetArticle = null;
+let isMindsetLoading = false;
 
 /**
  * 初始化美食抉择Tab
@@ -1224,6 +1346,9 @@ async function initFoodTab() {
 
   // 检查今日选择状态
   await checkTodayChoice();
+
+  // 初始化零食拦截功能
+  await initSnackInterception();
 }
 
 /**
@@ -1990,6 +2115,9 @@ async function initDestinationTab() {
   // 更新日期显示
   updateDestinationDate();
 
+  // 加载自定义目的地
+  await loadCustomDestinations();
+
   // 检查今日选择状态
   await checkTodayDestination();
 }
@@ -2194,4 +2322,614 @@ async function unlockDestination() {
     console.error('解锁失败:', error);
     showToast('解锁失败，请重试');
   }
+}
+
+// ========================================
+// 搞好心态功能
+// ========================================
+
+/**
+ * 初始化搞好心态tab
+ */
+async function initMindsetTab() {
+  console.log('=== Initializing Mindset Tab ===');
+
+  // 显示加载状态
+  showMindsetLoading();
+
+  try {
+    // 加载话题列表
+    mindsetTopics = await getMindsetTopics();
+    console.log('✓ Loaded', mindsetTopics.length, 'mindset topics');
+
+    // 加载或生成今日文章
+    await loadMindsetArticle();
+
+  } catch (error) {
+    console.error('Error initializing mindset tab:', error);
+    showMindsetError();
+  }
+}
+
+/**
+ * 加载或生成今日文章（优先从数据库读取）
+ */
+async function loadMindsetArticle() {
+  if (isMindsetLoading) {
+    console.log('Already loading mindset article, skipping...');
+    return;
+  }
+
+  isMindsetLoading = true;
+  showMindsetLoading();
+
+  try {
+    console.log('=== Loading Mindset Article ===');
+
+    // 首先尝试从数据库加载今日未读文章
+    currentMindsetArticle = await getTodayMindsetArticle();
+
+    if (currentMindsetArticle) {
+      console.log('✓ Found today\'s unread article in database');
+      displayMindsetArticle(currentMindsetArticle);
+      isMindsetLoading = false;
+      return;
+    }
+
+    // 如果数据库中没有今日未读文章，使用AI生成（慢）
+    console.log('⚠️ No unread articles in database, generating with AI (slow)...');
+
+    // 随机选择一个话题
+    if (mindsetTopics.length === 0) {
+      throw new Error('No topics available');
+    }
+
+    const randomTopic = mindsetTopics[Math.floor(Math.random() * mindsetTopics.length)];
+    console.log('Selected topic:', randomTopic.title);
+
+    // 调用AI生成文章
+    const articleContent = await generateMindsetArticle(randomTopic);
+    console.log('✓ Article generated, length:', articleContent.length);
+
+    // 保存到数据库（不带display_order，使用默认值0）
+    const savedArticle = await saveMindsetArticle(randomTopic.id, articleContent, 0);
+
+    if (savedArticle) {
+      currentMindsetArticle = savedArticle;
+      displayMindsetArticle(savedArticle);
+    } else {
+      // 如果保存失败，仍然显示生成的内容
+      currentMindsetArticle = {
+        topic: randomTopic,
+        content: articleContent
+      };
+      displayMindsetArticle(currentMindsetArticle);
+    }
+
+    isMindsetLoading = false;
+
+  } catch (error) {
+    console.error('Error loading mindset article:', error);
+    isMindsetLoading = false;
+    showMindsetError();
+  }
+}
+
+/**
+ * 显示文章内容
+ */
+function displayMindsetArticle(article) {
+  const titleElement = document.getElementById('mindset-topic-title');
+  const bodyElement = document.getElementById('mindset-article-body');
+
+  if (titleElement && article.topic) {
+    titleElement.textContent = article.topic.title;
+  }
+
+  if (bodyElement && article.content) {
+    bodyElement.textContent = article.content;
+  }
+
+  showMindsetContent();
+  console.log('✓ Article displayed');
+}
+
+/**
+ * 刷新文章（换一篇）- 优先读取数据库中的未读文章
+ */
+async function refreshMindsetArticle() {
+  try {
+    console.log('=== Refreshing Mindset Article ===');
+
+    // 标记当前文章为已读
+    if (currentMindsetArticle && currentMindsetArticle.id) {
+      const marked = await markMindsetArticleAsRead(currentMindsetArticle.id);
+      if (marked) {
+        console.log('✓ Current article marked as read');
+      }
+    }
+
+    // 清空当前文章
+    currentMindsetArticle = null;
+
+    // 重新加载文章（会优先从数据库读取未读的）
+    await loadMindsetArticle();
+
+    showToast('✨ 已换一篇文章');
+
+  } catch (error) {
+    console.error('Error refreshing mindset article:', error);
+    showToast('刷新失败，请稍后重试');
+  }
+}
+
+/**
+ * 重试加载文章
+ */
+async function retryLoadMindsetArticle() {
+  console.log('=== Retrying Mindset Article Load ===');
+  await loadMindsetArticle();
+}
+
+/**
+ * 显示加载状态
+ */
+function showMindsetLoading() {
+  const loadingDiv = document.getElementById('mindset-loading');
+  const contentDiv = document.getElementById('mindset-article-content');
+  const errorDiv = document.getElementById('mindset-error');
+
+  if (loadingDiv) loadingDiv.style.display = 'block';
+  if (contentDiv) contentDiv.style.display = 'none';
+  if (errorDiv) errorDiv.style.display = 'none';
+
+  console.log('✓ Showing loading state');
+}
+
+/**
+ * 显示内容状态
+ */
+function showMindsetContent() {
+  const loadingDiv = document.getElementById('mindset-loading');
+  const contentDiv = document.getElementById('mindset-article-content');
+  const errorDiv = document.getElementById('mindset-error');
+
+  if (loadingDiv) loadingDiv.style.display = 'none';
+  if (contentDiv) contentDiv.style.display = 'block';
+  if (errorDiv) errorDiv.style.display = 'none';
+
+  console.log('✓ Showing content');
+}
+
+/**
+ * 显示错误状态
+ */
+function showMindsetError() {
+  const loadingDiv = document.getElementById('mindset-loading');
+  const contentDiv = document.getElementById('mindset-article-content');
+  const errorDiv = document.getElementById('mindset-error');
+
+  if (loadingDiv) loadingDiv.style.display = 'none';
+  if (contentDiv) contentDiv.style.display = 'none';
+  if (errorDiv) errorDiv.style.display = 'block';
+
+  console.log('✓ Showing error state');
+}
+
+// ========================================
+// 零食拦截记录功能
+// ========================================
+
+/**
+ * 初始化零食拦截功能
+ */
+async function initSnackInterception() {
+  console.log('=== Initializing Snack Interception ===');
+
+  // 设置日期选择器默认值为今天
+  const dateInput = document.getElementById('snack-date-input');
+  if (dateInput) {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+    console.log('✓ Date picker initialized to today:', dateInput.value);
+  }
+}
+
+/**
+ * 记录拦截
+ */
+async function recordSnackInterception() {
+  const noteInput = document.getElementById('snack-note-input');
+  const dateInput = document.getElementById('snack-date-input');
+  const note = noteInput ? noteInput.value.trim() : '';
+  const selectedDate = dateInput ? dateInput.value : null;
+
+  if (!selectedDate) {
+    showToast('请选择日期');
+    return;
+  }
+
+  try {
+    console.log('=== Recording Snack Interception ===');
+    console.log('Selected date:', selectedDate);
+    const saved = await saveSnackInterception(selectedDate, note);
+
+    if (saved) {
+      showToast('✅ 已记录拦截');
+
+      // 清空备注输入框
+      if (noteInput) noteInput.value = '';
+
+      console.log('✓ Snack interception recorded for', selectedDate);
+    } else {
+      showToast('保存失败，请重试');
+    }
+  } catch (error) {
+    console.error('Error recording snack interception:', error);
+    showToast('保存失败，请重试');
+  }
+}
+
+/**
+ * 取消拦截记录
+ */
+async function cancelSnackInterception() {
+  const confirmed = confirm('确定要取消今日的拦截记录吗？');
+  if (!confirmed) return;
+
+  try {
+    if (!todaySnackInterception) return;
+
+    const deleted = await deleteSnackInterception(todaySnackInterception.id);
+
+    if (deleted) {
+      todaySnackInterception = null;
+      showSnackNotRecorded();
+      showToast('✅ 已取消今日记录');
+      console.log('✓ Snack interception cancelled');
+    } else {
+      showToast('取消失败，请重试');
+    }
+  } catch (error) {
+    console.error('Error cancelling snack interception:', error);
+    showToast('取消失败，请重试');
+  }
+}
+
+/**
+ * 显示拦截历史
+ */
+async function showSnackHistory() {
+  const historyContent = document.getElementById('snack-history-content');
+  if (!historyContent) return;
+
+  historyContent.style.display = 'block';
+
+  // 加载历史记录
+  await loadSnackHistory();
+}
+
+/**
+ * 关闭拦截历史
+ */
+function closeSnackHistory() {
+  const historyContent = document.getElementById('snack-history-content');
+  if (historyContent) {
+    historyContent.style.display = 'none';
+  }
+}
+
+/**
+ * 加载拦截历史记录
+ */
+async function loadSnackHistory() {
+  try {
+    snackHistory = await getSnackInterceptionHistory(30);
+    console.log('✓ Loaded snack history:', snackHistory.length, 'records');
+
+    // 更新统计
+    updateSnackStats();
+
+    // 渲染历史列表
+    renderSnackHistory();
+  } catch (error) {
+    console.error('Error loading snack history:', error);
+    const listDiv = document.getElementById('snack-history-list');
+    if (listDiv) {
+      listDiv.innerHTML = '<p class="history-empty">加载失败，请重试</p>';
+    }
+  }
+}
+
+/**
+ * 更新统计信息
+ */
+function updateSnackStats() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // 计算本周一
+  const dayOfWeek = now.getDay();
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysFromMonday);
+
+  // 计算本月第一天
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // 统计本周和本月的拦截次数
+  let weekCount = 0;
+  let monthCount = 0;
+
+  snackHistory.forEach(record => {
+    const recordDate = new Date(record.interception_date);
+    if (recordDate >= monday) weekCount++;
+    if (recordDate >= firstDayOfMonth) monthCount++;
+  });
+
+  // 更新显示
+  const weekStat = document.getElementById('stat-week');
+  const monthStat = document.getElementById('stat-month');
+
+  if (weekStat) weekStat.textContent = weekCount;
+  if (monthStat) monthStat.textContent = monthCount;
+}
+
+/**
+ * 渲染历史记录列表
+ */
+function renderSnackHistory() {
+  const listDiv = document.getElementById('snack-history-list');
+  if (!listDiv) return;
+
+  if (snackHistory.length === 0) {
+    listDiv.innerHTML = '<p class="history-empty">还没有拦截记录</p>';
+    return;
+  }
+
+  listDiv.innerHTML = snackHistory.map(record => {
+    // Fix timezone issue: force local timezone interpretation
+    const date = new Date(record.interception_date + 'T00:00:00');
+    const dateStr = `${date.getMonth() + 1}月${date.getDate()}日`;
+    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const dayStr = dayNames[date.getDay()];
+
+    let noteHtml = '';
+    if (record.note && record.note.trim()) {
+      noteHtml = `<div class="history-note">${escapeHtml(record.note)}</div>`;
+    }
+
+    return `
+      <div class="history-item">
+        <div class="history-date">${dateStr} ${dayStr}</div>
+        ${noteHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * HTML转义函数
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ========================================
+// 自定义目的地功能
+// ========================================
+
+/**
+ * 加载自定义目的地
+ */
+async function loadCustomDestinations() {
+  try {
+    customDestinations = await getCustomDestinations();
+    console.log('✓ Loaded custom destinations:', customDestinations.length, 'items');
+
+    renderCustomDestinations();
+  } catch (error) {
+    console.error('Error loading custom destinations:', error);
+    const listDiv = document.getElementById('custom-destinations-list');
+    if (listDiv) {
+      listDiv.innerHTML = '<p class="destinations-empty">加载失败，请重试</p>';
+    }
+  }
+}
+
+/**
+ * 渲染自定义目的地列表
+ */
+function renderCustomDestinations() {
+  const listDiv = document.getElementById('custom-destinations-list');
+  if (!listDiv) return;
+
+  if (customDestinations.length === 0) {
+    listDiv.innerHTML = '<p class="destinations-empty">还没有添加自定义目的地</p>';
+    return;
+  }
+
+  listDiv.innerHTML = customDestinations.map(dest => `
+    <div class="destination-item" data-id="${dest.id}">
+      <span class="destination-name">${escapeHtml(dest.name)}</span>
+      <button class="btn-delete-destination" data-id="${dest.id}">
+        🗑️
+      </button>
+    </div>
+  `).join('');
+
+  // 绑定删除按钮事件
+  listDiv.querySelectorAll('.btn-delete-destination').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-id');
+      deleteCustomDestinationItem(id);
+    };
+  });
+}
+
+/**
+ * 添加自定义目的地
+ */
+async function addCustomDestinationHandler() {
+  const input = document.getElementById('custom-destination-input');
+  if (!input) return;
+
+  const name = input.value.trim();
+
+  if (!name) {
+    showToast('请输入目的地名称');
+    input.focus();
+    return;
+  }
+
+  // 检查是否重复
+  const exists = customDestinations.some(d => d.name === name);
+  if (exists) {
+    showToast('该目的地已存在');
+    input.value = '';
+    input.focus();
+    return;
+  }
+
+  try {
+    console.log('=== Adding Custom Destination ===');
+    const added = await addCustomDestination(name);
+
+    if (added) {
+      customDestinations.unshift(added);
+      renderCustomDestinations();
+      showToast('✅ 已添加目的地');
+
+      // 清空输入框
+      input.value = '';
+      input.focus();
+
+      console.log('✓ Custom destination added:', name);
+    } else {
+      showToast('添加失败，请重试');
+    }
+  } catch (error) {
+    console.error('Error adding custom destination:', error);
+    showToast('添加失败，请重试');
+  }
+}
+
+/**
+ * 删除自定义目的地
+ */
+async function deleteCustomDestinationItem(id) {
+  const dest = customDestinations.find(d => d.id === id);
+  if (!dest) return;
+
+  const confirmed = confirm(`确定要删除"${dest.name}"吗？`);
+  if (!confirmed) return;
+
+  try {
+    const deleted = await deleteCustomDestination(id);
+
+    if (deleted) {
+      customDestinations = customDestinations.filter(d => d.id !== id);
+      renderCustomDestinations();
+      showToast('✅ 已删除目的地');
+      console.log('✓ Custom destination deleted:', dest.name);
+    } else {
+      showToast('删除失败，请重试');
+    }
+  } catch (error) {
+    console.error('Error deleting custom destination:', error);
+    showToast('删除失败，请重试');
+  }
+}
+
+/**
+ * 展开/收起自定义目的地列表
+ */
+function toggleCustomDestinationsList() {
+  const listDiv = document.getElementById('custom-destinations-list');
+  const btnToggle = document.getElementById('btn-toggle-destinations');
+
+  if (!listDiv || !btnToggle) return;
+
+  // Toggle collapsed class
+  const isCollapsed = listDiv.classList.contains('collapsed');
+
+  if (isCollapsed) {
+    listDiv.classList.remove('collapsed');
+    btnToggle.classList.remove('collapsed');
+    console.log('✓ Expanded custom destinations list');
+  } else {
+    listDiv.classList.add('collapsed');
+    btnToggle.classList.add('collapsed');
+    console.log('✓ Collapsed custom destinations list');
+  }
+}
+
+/**
+ * 更新随机目的地选择（包含自定义目的地）
+ */
+async function randomDestination() {
+  console.log('=== Random Destination Selection ===');
+
+  // 显示骰子动画
+  const diceDiv = document.getElementById('destination-dice-animation');
+  const buttonsDiv = document.getElementById('destination-choice-buttons');
+  const confirmSection = document.getElementById('destination-confirm-section');
+
+  if (diceDiv) diceDiv.style.display = 'block';
+  if (buttonsDiv) buttonsDiv.style.display = 'none';
+  if (confirmSection) confirmSection.style.display = 'none';
+
+  // 等待动画
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // 合并CONFIG中的目的地和自定义目的地
+  const allDestinations = [
+    ...(CONFIG.destinations || []),
+    ...(customDestinations || []).map(d => d.name)
+  ];
+
+  if (allDestinations.length === 0) {
+    showToast('没有可选择的目的地');
+    if (diceDiv) diceDiv.style.display = 'none';
+    if (buttonsDiv) buttonsDiv.style.display = 'flex';
+    return;
+  }
+
+  // 获取本周历史，过滤重复
+  const weekHistory = await getThisWeekDestinations();
+  const usedDestinations = weekHistory.map(record => record.destination);
+
+  // 过滤未选择过的目的地
+  let availableDestinations = allDestinations.filter(d => !usedDestinations.includes(d));
+
+  // 如果所有目的地都被选过，重置为全部
+  if (availableDestinations.length === 0) {
+    availableDestinations = allDestinations;
+    console.log('All destinations used this week, resetting pool');
+  }
+
+  // 随机选择
+  const randomIndex = Math.floor(Math.random() * availableDestinations.length);
+  const selected = availableDestinations[randomIndex];
+
+  // 保存临时选择
+  tempDestination = selected;
+
+  // 显示结果
+  displayDestinationChoice(selected);
+
+  // 隐藏动画，显示结果和确认按钮
+  if (diceDiv) diceDiv.style.display = 'none';
+
+  const resultDiv = document.getElementById('destination-choice-result');
+
+  if (resultDiv) resultDiv.style.display = 'block';
+  if (confirmSection) confirmSection.style.display = 'flex';
+
+  console.log('✓ Selected destination:', selected);
 }

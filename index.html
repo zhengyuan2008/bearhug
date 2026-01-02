@@ -21,9 +21,33 @@
   <meta name="format-detection" content="telephone=no" />
 </head>
 <body>
-  
+
+  <!-- 密码保护界面 -->
+  <div class="password-overlay" id="password-overlay">
+    <div class="password-card">
+      <div class="password-icon">🔒</div>
+      <h2 class="password-title">这是给🐻的秘密小空间</h2>
+      <p class="password-hint">请输入密码访问</p>
+      <div class="password-input-group">
+        <input
+          type="password"
+          id="password-input"
+          class="password-input"
+          placeholder="请输入密码"
+          autocomplete="off"
+        />
+        <button class="btn-password-submit" id="btn-password-submit">
+          进入
+        </button>
+      </div>
+      <p class="password-error" id="password-error" style="display: none;">
+        ❌ 密码不正确，请重试
+      </p>
+    </div>
+  </div>
+
   <!-- 主容器 -->
-  <div class="glass-card">
+  <div class="glass-card" id="main-content">
     
     <!-- 头部 -->
     <header class="header">
@@ -52,6 +76,10 @@
       <button class="tab-button" data-tab="work-troubles" id="tab-work-troubles">
         <span>💼</span>
         <span>工作烦恼</span>
+      </button>
+      <button class="tab-button" data-tab="mindset" id="tab-mindset">
+        <span>💚</span>
+        <span>搞好心态</span>
       </button>
     </nav>
     
@@ -454,6 +482,68 @@
 
         </section>
 
+        <!-- 零食拦截记录区域 -->
+        <section class="glass-mini-card snack-interception-section">
+          <h2 class="section-title">🍫 零食拦截记录</h2>
+          <p class="section-description">记录胖🐰成功拦住🐻晚上吃零食</p>
+
+          <!-- 拦截记录表单 -->
+          <div class="snack-record-form" id="snack-record-form">
+            <div class="snack-date-selector">
+              <label for="snack-date-input" class="snack-date-label">记录哪一天的拦截：</label>
+              <input
+                type="date"
+                id="snack-date-input"
+                class="snack-date-input"
+              />
+            </div>
+
+            <p class="snack-hint">胖🐰成功拦截了吗？</p>
+            <textarea
+              class="snack-note-input"
+              id="snack-note-input"
+              placeholder="可以写点备注（可选）&#10;例如：想吃冰淇淋被拦下了😤"
+              rows="3"
+            ></textarea>
+            <button class="btn-record-interception" id="btn-record-interception">
+              ✅ 记录这次拦截
+            </button>
+          </div>
+
+          <!-- 历史记录按钮 -->
+          <button class="btn-show-history" id="btn-show-snack-history">
+            📊 查看拦截历史
+          </button>
+
+          <!-- 历史记录展开区域 -->
+          <div class="snack-history-content" id="snack-history-content" style="display: none;">
+            <div class="snack-history-header">
+              <h3>📅 拦截历史记录</h3>
+              <button class="btn-close-history" id="btn-close-snack-history">✕</button>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="snack-stats" id="snack-stats">
+              <div class="stat-item">
+                <span class="stat-label">本周拦截</span>
+                <span class="stat-value" id="stat-week">0</span>
+                <span class="stat-unit">次</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">本月拦截</span>
+                <span class="stat-value" id="stat-month">0</span>
+                <span class="stat-unit">次</span>
+              </div>
+            </div>
+
+            <!-- 历史记录列表 -->
+            <div class="snack-history-list" id="snack-history-list">
+              <p class="snack-history-loading">正在加载...</p>
+            </div>
+          </div>
+
+        </section>
+
       </div>
       <!-- 美食抉择Tab内容结束 -->
 
@@ -495,10 +585,13 @@
             </button>
           </div>
 
-          <!-- 确认按钮 -->
+          <!-- 确认按钮（显示结果后）-->
           <div class="food-confirm-section" id="destination-confirm-section" style="display: none;">
+            <button class="btn-reroll" id="btn-reroll-destination">
+              🔄 再来一次
+            </button>
             <button class="btn-confirm-choice" id="btn-confirm-destination">
-              ✅ 确认选择
+              ✅ 就这个了
             </button>
           </div>
 
@@ -512,6 +605,38 @@
             <button class="btn-unlock" id="btn-unlock-destination">
               🔓 重新来过
             </button>
+          </div>
+
+        </section>
+
+        <!-- 自定义目的地区域 -->
+        <section class="glass-mini-card custom-destination-section">
+          <h2 class="section-title">📝 添加新目的地</h2>
+          <p class="section-description">手动添加你想去的地方，会加入随机选择</p>
+
+          <!-- 输入区域 -->
+          <div class="custom-destination-input-group">
+            <input
+              type="text"
+              id="custom-destination-input"
+              class="custom-destination-input"
+              placeholder="例如：星巴克、图书馆、公园..."
+              maxlength="50"
+            />
+            <button class="btn-add-destination" id="btn-add-destination">
+              ➕ 添加
+            </button>
+          </div>
+
+          <!-- 已添加的目的地列表 -->
+          <div class="custom-destinations-header" id="custom-destinations-header">
+            <h3>已添加的目的地</h3>
+            <button class="btn-toggle-destinations" id="btn-toggle-destinations">
+              <span class="toggle-arrow">▼</span>
+            </button>
+          </div>
+          <div class="custom-destinations-list" id="custom-destinations-list">
+            <p class="custom-destinations-loading">正在加载...</p>
           </div>
 
         </section>
@@ -566,6 +691,56 @@
 
       </div>
       <!-- 工作烦恼Tab内容结束 -->
+
+      <!-- 搞好心态Tab内容 -->
+      <div class="tab-content" id="content-mindset">
+
+        <!-- 欢迎区域 -->
+        <section class="glass-mini-card mindset-welcome">
+          <h2 class="section-title">💚 今天也要好好对待自己</h2>
+          <p class="section-description">胖🐰给🐻写了一篇文章，希望能让你感到被看见、被理解 🫂</p>
+        </section>
+
+        <!-- 文章显示区域 -->
+        <section class="glass-mini-card mindset-article-section">
+
+          <!-- 加载中 -->
+          <div class="mindset-loading" id="mindset-loading">
+            <div class="loading-spinner">⏳</div>
+            <p>AI正在为你生成今日文章...</p>
+            <p class="loading-hint">首次加载可能需要10-30秒</p>
+          </div>
+
+          <!-- 文章内容 -->
+          <div class="mindset-article-content" id="mindset-article-content" style="display: none;">
+            <!-- 话题标题 -->
+            <div class="mindset-topic-header">
+              <h3 class="mindset-topic-title" id="mindset-topic-title"></h3>
+            </div>
+
+            <!-- 文章正文 -->
+            <div class="mindset-article-body" id="mindset-article-body"></div>
+
+            <!-- 底部按钮 -->
+            <div class="mindset-article-footer">
+              <button class="btn-refresh-mindset" id="btn-refresh-mindset">
+                🔄 换一篇文章
+              </button>
+            </div>
+          </div>
+
+          <!-- 错误提示 -->
+          <div class="mindset-error" id="mindset-error" style="display: none;">
+            <p>😔 加载失败，请稍后重试</p>
+            <button class="btn-retry-mindset" id="btn-retry-mindset">
+              重试
+            </button>
+          </div>
+
+        </section>
+
+      </div>
+      <!-- 搞好心态Tab内容结束 -->
 
     </main>
     

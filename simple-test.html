@@ -1,0 +1,38 @@
+<\!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Test</title>
+</head>
+<body>
+  <h1>简单测试</h1>
+  <button onclick="alert('按钮点击测试成功！')">测试按钮1</button>
+  <button id="test2">测试按钮2</button>
+  <p id="result">等待测试...</p>
+  
+  <script>
+    // 测试基本JavaScript
+    console.log('JavaScript正在运行');
+    
+    // 测试按钮2
+    document.getElementById('test2').onclick = function() {
+      document.getElementById('result').textContent = '按钮2点击成功！';
+    };
+    
+    // 加载openai-config.js
+    const script = document.createElement('script');
+    script.src = '/js/openai-config.js?v=5';
+    script.onload = function() {
+      console.log('openai-config.js 加载成功');
+      if (typeof OPENAI_CONFIG \!== 'undefined') {
+        console.log('✓ OPENAI_CONFIG 存在');
+        console.log('✓ API Key:', OPENAI_CONFIG.localDevelopment.apiKey ? '已配置' : '未配置');
+      }
+    };
+    script.onerror = function() {
+      console.error('❌ openai-config.js 加载失败');
+    };
+    document.head.appendChild(script);
+  </script>
+</body>
+</html>

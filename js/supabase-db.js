@@ -705,4 +705,421 @@ async function getThisWeekDestinations() {
   }
 }
 
+// ========================================
+// 搞好心态功能
+// ========================================
 
+/**
+ * 获取所有活跃的心态话题
+ */
+async function getMindsetTopics() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('mindset_topics')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+
+    if (error) throw error;
+    console.log('✓ Loaded mindset topics:', data?.length || 0, 'topics');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading mindset topics:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取今日未读的心态文章（优先从数据库读取）
+ */
+async function getTodayMindsetArticle() {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    // 查询今日生成且未读、未过期的文章
+    const { data, error } = await client
+      .from('mindset_articles')
+      .select(`
+        *,
+        topic:mindset_topics(*)
+      `)
+      .eq('generation_date', today)
+      .eq('is_expired', false)
+      .eq('is_read', false)
+      .order('display_order', { ascending: true })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    console.log('✓ Loaded today unread article:', data ? 'found' : 'not found');
+    return data || null;
+  } catch (error) {
+    console.error('Error loading today mindset article:', error);
+    return null;
+  }
+}
+
+/**
+ * 保存心态文章（带显示顺序）
+ */
+async function saveMindsetArticle(topicId, content, displayOrder = 0) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, mindset article not saved');
+    return null;
+  }
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('mindset_articles')
+      .insert([{
+        topic_id: topicId,
+        content: content,
+        generation_date: today,
+        display_order: displayOrder,
+        is_expired: false,
+        is_read: false
+      }])
+      .select(`
+        *,
+        topic:mindset_topics(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Mindset article saved, order:', displayOrder);
+    return data;
+  } catch (error) {
+    console.error('Error saving mindset article:', error);
+    return null;
+  }
+}
+
+/**
+ * 标记文章为已读
+ */
+async function markMindsetArticleAsRead(articleId) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const { error } = await client
+      .from('mindset_articles')
+      .update({ is_read: true })
+      .eq('id', articleId);
+
+    if (error) throw error;
+    console.log('✓ Article marked as read:', articleId);
+    return true;
+  } catch (error) {
+    console.error('Error marking article as read:', error);
+    return false;
+  }
+}
+
+/**
+ * 将昨天的文章标记为过期
+ */
+async function expireYesterdayArticles() {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    const { error } = await client
+      .from('mindset_articles')
+      .update({ is_expired: true })
+      .eq('generation_date', yesterdayStr)
+      .eq('is_expired', false);
+
+    if (error) throw error;
+    console.log('✓ Yesterday articles expired:', yesterdayStr);
+    return true;
+  } catch (error) {
+    console.error('Error expiring yesterday articles:', error);
+    return false;
+  }
+}
+
+/**
+ * 删除今日的心态文章（用于刷新 - 开发调试用）
+ */
+async function deleteTodayMindsetArticle() {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { error } = await client
+      .from('mindset_articles')
+      .delete()
+      .eq('generation_date', today);
+
+    if (error) throw error;
+    console.log('✓ Today mindset articles deleted');
+    return true;
+  } catch (error) {
+    console.error('Error deleting mindset article:', error);
+    return false;
+  }
+}
+
+// ========================================
+// 历史上的今天
+// ========================================
+
+/**
+ * 获取今日的所有历史故事
+ */
+async function getTodayHistoryStories() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+
+    const { data, error } = await client
+      .from('history_today_stories')
+      .select('*')
+      .eq('month', month)
+      .eq('day', day)
+      .order('story_index', { ascending: true });
+
+    if (error) throw error;
+    console.log(`✓ Loaded ${month}/${day} history stories:`, data?.length || 0, 'stories');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading today history stories:', error);
+    return [];
+  }
+}
+
+/**
+ * 保存历史故事（用于预生成脚本）
+ */
+async function saveHistoryStory(month, day, story, storyIndex) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, history story not saved');
+    return null;
+  }
+
+  try {
+    const { data, error } = await client
+      .from('history_today_stories')
+      .insert([{
+        month: month,
+        day: day,
+        story: story,
+        story_index: storyIndex
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log(`✓ History story saved: ${month}/${day} #${storyIndex}`);
+    return data;
+  } catch (error) {
+    console.error('Error saving history story:', error);
+    return null;
+  }
+}
+
+// ========================================
+// 零食拦截记录
+// ========================================
+
+/**
+ * 获取今日的零食拦截记录
+ */
+async function getTodaySnackInterception() {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('snack_interceptions')
+      .select('*')
+      .eq('interception_date', today)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    return data || null;
+  } catch (error) {
+    console.error('Error loading today snack interception:', error);
+    return null;
+  }
+}
+
+/**
+ * 保存零食拦截记录
+ */
+async function saveSnackInterception(interceptionDate, note = '') {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, interception not saved');
+    return null;
+  }
+
+  try {
+    const { data, error } = await client
+      .from('snack_interceptions')
+      .insert([{
+        interception_date: interceptionDate,
+        note: note
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Snack interception saved for date:', interceptionDate);
+    return data;
+  } catch (error) {
+    console.error('Error saving snack interception:', error);
+    return null;
+  }
+}
+
+/**
+ * 获取零食拦截历史记录
+ */
+async function getSnackInterceptionHistory(days = 30) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const startDateStr = startDate.toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('snack_interceptions')
+      .select('*')
+      .gte('interception_date', startDateStr)
+      .order('interception_date', { ascending: false });
+
+    if (error) throw error;
+    console.log('✓ Loaded snack interception history:', data?.length || 0, 'records');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading snack interception history:', error);
+    return [];
+  }
+}
+
+/**
+ * 删除零食拦截记录
+ */
+async function deleteSnackInterception(id) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const { error } = await client
+      .from('snack_interceptions')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    console.log('✓ Snack interception deleted');
+    return true;
+  } catch (error) {
+    console.error('Error deleting snack interception:', error);
+    return false;
+  }
+}
+
+// ========================================
+// 自定义目的地
+// ========================================
+
+/**
+ * 获取所有自定义目的地
+ */
+async function getCustomDestinations() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('custom_destinations')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    console.log('✓ Loaded custom destinations:', data?.length || 0, 'items');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading custom destinations:', error);
+    return [];
+  }
+}
+
+/**
+ * 添加自定义目的地
+ */
+async function addCustomDestination(name) {
+  const client = getSupabase();
+  if (!client) {
+    console.warn('Supabase not available, destination not saved');
+    return null;
+  }
+
+  try {
+    const { data, error } = await client
+      .from('custom_destinations')
+      .insert([{
+        name: name.trim()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Custom destination added:', name);
+    return data;
+  } catch (error) {
+    console.error('Error adding custom destination:', error);
+    return null;
+  }
+}
+
+/**
+ * 删除自定义目的地（软删除）
+ */
+async function deleteCustomDestination(id) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const { error } = await client
+      .from('custom_destinations')
+      .update({ is_active: false })
+      .eq('id', id);
+
+    if (error) throw error;
+    console.log('✓ Custom destination deleted');
+    return true;
+  } catch (error) {
+    console.error('Error deleting custom destination:', error);
+    return false;
+  }
+}
