@@ -46,20 +46,20 @@ ${backgroundContext}
 
 请直接输出文章内容，不要加标题或前缀说明。`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [{
-          role: 'user',
-          content: prompt
-        }],
-        temperature: 0.7,
-        max_tokens: 500
+        model: 'gpt-5-nano',
+        input: prompt,
+        store: true,
+        reasoning: null,
+        text: {
+          verbosity: 'low'
+        }
       })
     });
 
@@ -69,11 +69,14 @@ ${backgroundContext}
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    // Extract text from response
+    // Extract text from response - GPT-5 format
     let article = `${topicTitle}\n\n我知道你现在可能在经历一些不容易的时刻。作为你的胖🐰，我想告诉你：你所感受到的一切都是真实的，也都是被允许的。\n\n${topicDescription}这些感受不需要被快速解决，也不需要被证明是"对"还是"错"。它们就在那里，是你此刻真实状态的一部分。\n\n你不需要总是很坚强，也不需要总是很积极。有时候，允许自己就这样待着，已经是很了不起的事情了。我会一直在你身边，陪着你慢慢来。`; // fallback
 
-    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-      article = data.choices[0].message.content.trim();
+    if (data.output && Array.isArray(data.output)) {
+      const messageItem = data.output.find(item => item.type === 'message');
+      if (messageItem && messageItem.content && messageItem.content[0]) {
+        article = messageItem.content[0].text;
+      }
     }
 
     return {

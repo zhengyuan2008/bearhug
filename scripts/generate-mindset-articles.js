@@ -20,7 +20,7 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // OpenAI配置（从环境变量读取）
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = 'gpt-4o-mini';
+const OPENAI_MODEL = 'gpt-5-nano';
 
 /**
  * 从数据库获取所有激活的话题
@@ -91,7 +91,7 @@ async function generateArticleWithAI(topic) {
   console.log(`🤖 Generating article for topic: ${topic.title}`);
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -99,12 +99,12 @@ async function generateArticleWithAI(topic) {
       },
       body: JSON.stringify({
         model: OPENAI_MODEL,
-        messages: [{
-          role: 'user',
-          content: getMindsetPrompt(topic)
-        }],
-        temperature: 0.7,
-        max_tokens: 500
+        input: getMindsetPrompt(topic),
+        store: true,
+        reasoning: null,
+        text: {
+          verbosity: 'low'
+        }
       })
     });
 
@@ -115,11 +115,14 @@ async function generateArticleWithAI(topic) {
 
     const data = await response.json();
 
-    // 提取文本内容
-    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-      const content = data.choices[0].message.content.trim();
-      console.log(`✅ Generated article (${content.length} chars)`);
-      return content;
+    // 提取文本内容 - GPT-5 API响应格式
+    if (data.output && Array.isArray(data.output)) {
+      const messageItem = data.output.find(item => item.type === 'message');
+      if (messageItem && messageItem.content && messageItem.content[0]) {
+        const content = messageItem.content[0].text.trim();
+        console.log(`✅ Generated article (${content.length} chars)`);
+        return content;
+      }
     }
 
     throw new Error('Failed to extract content from OpenAI response');
