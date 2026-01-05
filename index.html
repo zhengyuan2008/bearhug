@@ -13,7 +13,7 @@
   <link rel="preload" href="js/fireworks.js" as="script" />
   
   <!-- 样式表 -->
-  <link rel="stylesheet" href="css/styles.css?v=3" />
+  <link rel="stylesheet" href="css/styles.css?v=4" />
   
   <!-- iOS Safari 优化 -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -739,11 +739,57 @@
 
         </section>
 
+        <!-- 秘密按钮区域 -->
+        <section class="secret-button-section">
+          <button class="secret-heart-button" id="secret-heart-button" title="有个小秘密...">
+            💝
+          </button>
+        </section>
+
       </div>
       <!-- 搞好心态Tab内容结束 -->
 
     </main>
-    
+
+    <!-- 秘密信模态框 -->
+    <div class="secret-modal" id="secret-modal" style="display: none;">
+      <div class="secret-modal-overlay" id="secret-modal-overlay"></div>
+      <div class="secret-modal-content">
+        <button class="secret-modal-close" id="secret-modal-close">✕</button>
+
+        <div class="secret-header">
+          <div class="secret-icon">💝</div>
+          <h3 class="secret-title">给🐻的一封信</h3>
+        </div>
+
+        <div class="secret-body">
+          <p class="secret-message">
+            🐻，我想和你分享我最近关于未来、关于我们可能有的小宝宝的一些认真思考。
+          </p>
+          <p class="secret-message">
+            写这封信不是为了给你压力，而是想让你看到：<strong>我真的很重视你</strong>，也很重视我们的未来。
+          </p>
+          <p class="secret-message">
+            我想让你知道，你的价值从来不是由"能否给我带来孩子"来定义的。
+          </p>
+          <p class="secret-message">
+            无论将来会怎样，<strong>我希望我们能一起面对</strong>。你不是一个人在承受这些，我会一直在你身边。
+          </p>
+          <p class="secret-signature">
+            — 永远爱你的胖🐰
+          </p>
+
+          <div class="secret-pdf-section">
+            <p class="pdf-intro">这份文档里有我认真思考的所有内容：</p>
+            <a href="documents/our-future.pdf" target="_blank" class="btn-pdf-open">
+              📄 打开我的思考笔记
+            </a>
+            <p class="pdf-note">（点击在新窗口打开PDF）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 页脚 -->
     <footer class="footer">
       <span class="heart">♥</span> Made by 胖兔，只给🐻看
@@ -760,7 +806,7 @@
   <script src="js/supabase-db.js?v=3"></script>
   <script src="js/config.js?v=3"></script>
   <script src="js/openai-config.js?v=5"></script>
-  <script src="js/main.js?v=3"></script>
+  <script src="js/main.js?v=4"></script>
   <script src="js/fireworks.js?v=3"></script>
   <script>
     // 立即测试

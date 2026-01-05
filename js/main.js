@@ -2933,3 +2933,67 @@ async function randomDestination() {
 
   console.log('✓ Selected destination:', selected);
 }
+
+// ========================================
+// 秘密按钮功能
+// ========================================
+
+/**
+ * 初始化秘密按钮
+ */
+function initSecretButton() {
+  const secretBtn = document.getElementById('secret-heart-button');
+  const secretModal = document.getElementById('secret-modal');
+  const modalClose = document.getElementById('secret-modal-close');
+  const modalOverlay = document.getElementById('secret-modal-overlay');
+
+  // 打开模态框
+  if (secretBtn) {
+    secretBtn.addEventListener('click', () => {
+      console.log('💝 Opening secret modal...');
+      if (secretModal) {
+        secretModal.style.display = 'flex';
+        // 添加淡入动画
+        setTimeout(() => {
+          secretModal.style.opacity = '1';
+        }, 10);
+      }
+    });
+  }
+
+  // 关闭模态框的函数
+  const closeModal = () => {
+    console.log('💝 Closing secret modal...');
+    if (secretModal) {
+      secretModal.style.opacity = '0';
+      setTimeout(() => {
+        secretModal.style.display = 'none';
+      }, 300);
+    }
+  };
+
+  // 点击关闭按钮
+  if (modalClose) {
+    modalClose.addEventListener('click', closeModal);
+  }
+
+  // 点击背景遮罩
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', closeModal);
+  }
+
+  // ESC键关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && secretModal && secretModal.style.display === 'flex') {
+      closeModal();
+    }
+  });
+
+  console.log('✓ Secret button initialized');
+}
+
+// 页面加载完成后初始化秘密按钮
+document.addEventListener('DOMContentLoaded', () => {
+  initSecretButton();
+});
+
