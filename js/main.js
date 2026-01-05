@@ -2366,7 +2366,7 @@ async function loadMindsetArticle() {
   try {
     console.log('=== Loading Mindset Article ===');
 
-    // 首先尝试从数据库加载今日未读文章
+    // 从数据库加载今日未读文章
     currentMindsetArticle = await getTodayMindsetArticle();
 
     if (currentMindsetArticle) {
@@ -2376,37 +2376,10 @@ async function loadMindsetArticle() {
       return;
     }
 
-    // 如果数据库中没有今日未读文章，使用AI生成（慢）
-    console.log('⚠️ No unread articles in database, generating with AI (slow)...');
-
-    // 随机选择一个话题
-    if (mindsetTopics.length === 0) {
-      throw new Error('No topics available');
-    }
-
-    const randomTopic = mindsetTopics[Math.floor(Math.random() * mindsetTopics.length)];
-    console.log('Selected topic:', randomTopic.title);
-
-    // 调用AI生成文章
-    const articleContent = await generateMindsetArticle(randomTopic);
-    console.log('✓ Article generated, length:', articleContent.length);
-
-    // 保存到数据库（不带display_order，使用默认值0）
-    const savedArticle = await saveMindsetArticle(randomTopic.id, articleContent, 0);
-
-    if (savedArticle) {
-      currentMindsetArticle = savedArticle;
-      displayMindsetArticle(savedArticle);
-    } else {
-      // 如果保存失败，仍然显示生成的内容
-      currentMindsetArticle = {
-        topic: randomTopic,
-        content: articleContent
-      };
-      displayMindsetArticle(currentMindsetArticle);
-    }
-
+    // 如果数据库中没有今日未读文章，显示错误提示
+    console.warn('⚠️ No unread articles found in database for today');
     isMindsetLoading = false;
+    showMindsetError();
 
   } catch (error) {
     console.error('Error loading mindset article:', error);

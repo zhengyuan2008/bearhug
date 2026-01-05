@@ -20,37 +20,68 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // OpenAI配置（从环境变量读取）
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = 'gpt-5-nano';
+const OPENAI_MODEL = 'gpt-4o-mini';
 
 /**
- * 心态话题列表
- * 注意：实际运行时应该从数据库 mindset_topics 表读取
+ * 从数据库获取所有激活的话题
  */
-const TOPICS = [
-  { id: 'topic-1', title: '工作压力管理', prompt: '如何更好地管理工作中的压力' },
-  { id: 'topic-2', title: '情绪调节', prompt: '负面情绪出现时如何自我调节' },
-  { id: 'topic-3', title: '自我接纳', prompt: '如何接纳不完美的自己' },
-  { id: 'topic-4', title: '人际关系', prompt: '如何处理复杂的人际关系' },
-  { id: 'topic-5', title: '职业发展', prompt: '对职业发展感到迷茫时该怎么办' },
-  { id: 'topic-6', title: '生活平衡', prompt: '如何平衡工作和生活' },
-  { id: 'topic-7', title: '焦虑应对', prompt: '焦虑时如何让自己平静下来' },
-  { id: 'topic-8', title: '自信培养', prompt: '如何建立自信心' }
-];
+async function fetchTopicsFromDatabase() {
+  console.log('📚 Fetching topics from database...');
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/mindset_topics?is_active=eq.true&order=display_order.asc`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch topics: ${response.status}`);
+    }
+
+    const topics = await response.json();
+    console.log(`✅ Loaded ${topics.length} topics from database`);
+    return topics;
+
+  } catch (error) {
+    console.error('❌ Error fetching topics:', error.message);
+    throw error;
+  }
+}
 
 /**
  * 生成心态文章的提示词
  */
 function getMindsetPrompt(topic) {
-  return `你是一个温暖、专业的心理健康支持助手。请写一篇关于"${topic.title}"的文章，主题是：${topic.prompt}。
+  return `你是一个温暖、专业的心理支持伴侣（胖🐰），正在给你的🐻写一篇关于"${topic.title}"的安慰和鼓励文章。
 
-要求：
-1. 字数：300-400字
-2. 语气：温暖、共情、鼓励，像朋友在说话
-3. 结构：开头共情 → 分析原因 → 提供2-3个具体可行的建议 → 结尾鼓励
-4. 避免：说教、空洞的鸡汤、过度乐观、专业术语
-5. 包含：具体例子、实用技巧、可执行步骤
+## 背景信息
+${topic.background_context}
 
-请直接输出文章内容，不要标题和额外说明。`;
+## 写作要求
+1. **语气温柔、亲密**：像胖🐰在对🐻说话，用"你"而不是"我们"
+2. **真实共情**：真正理解🐻的处境和感受，不要空洞的鼓励
+3. **具体可感**：用具体的例子、比喻，让🐻觉得被看见
+4. **接纳为主**：重点是接纳现状，而不是要求改变
+5. **适度建议**：如果有建议，要温和、可选择，不要说教
+6. **字数**：280-350字
+7. **结构**：
+   - 开头：理解和看见🐻的感受
+   - 中间：深入共情，给出接纳和支持
+   - 结尾：温暖的陪伴和希望
+
+## 注意事项
+- 不要用"加油""你可以的"这类过于积极的话
+- 不要说"每个人都...""大家都..."这类泛泛之谈
+- 要让🐻感到"被看见""被理解""被允许"
+- 可以用一些温柔的比喻和意象
+- 语言要自然、口语化，像在聊天
+- **最重要**：文章末尾不要加任何"AI生成"、"by ChatGPT"之类的标识
+
+请直接输出文章内容，不要加标题或前缀说明。`;
 }
 
 /**
@@ -60,7 +91,7 @@ async function generateArticleWithAI(topic) {
   console.log(`🤖 Generating article for topic: ${topic.title}`);
 
   try {
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,12 +99,12 @@ async function generateArticleWithAI(topic) {
       },
       body: JSON.stringify({
         model: OPENAI_MODEL,
-        input: getMindsetPrompt(topic),
-        store: true,
-        reasoning: null,
-        text: {
-          verbosity: 'low'
-        }
+        messages: [{
+          role: 'user',
+          content: getMindsetPrompt(topic)
+        }],
+        temperature: 0.7,
+        max_tokens: 500
       })
     });
 
@@ -85,13 +116,10 @@ async function generateArticleWithAI(topic) {
     const data = await response.json();
 
     // 提取文本内容
-    if (data.output && Array.isArray(data.output)) {
-      const messageItem = data.output.find(item => item.type === 'message');
-      if (messageItem && messageItem.content && messageItem.content[0]) {
-        const content = messageItem.content[0].text;
-        console.log(`✅ Generated article (${content.length} chars)`);
-        return content;
-      }
+    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+      const content = data.choices[0].message.content.trim();
+      console.log(`✅ Generated article (${content.length} chars)`);
+      return content;
     }
 
     throw new Error('Failed to extract content from OpenAI response');
@@ -184,10 +212,13 @@ async function expireYesterdayArticles() {
 }
 
 /**
- * 随机选择5个不同的话题
+ * 随机选择指定数量的话题
  */
-function selectRandomTopics(count = 5) {
-  const shuffled = [...TOPICS].sort(() => Math.random() - 0.5);
+function selectRandomTopics(topics, count = 5) {
+  if (topics.length <= count) {
+    return topics;
+  }
+  const shuffled = [...topics].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 
@@ -198,15 +229,27 @@ async function generateTodayArticles() {
   console.log('=== 开始生成今日心态文章 ===');
   console.log(`📅 Date: ${new Date().toISOString().split('T')[0]}`);
 
-  // 1. 先过期昨天的文章
+  // 1. 从数据库获取话题
+  let allTopics;
+  try {
+    allTopics = await fetchTopicsFromDatabase();
+    if (!allTopics || allTopics.length === 0) {
+      throw new Error('No active topics found in database');
+    }
+  } catch (error) {
+    console.error('❌ Failed to fetch topics from database');
+    throw error;
+  }
+
+  // 2. 先过期昨天的文章
   try {
     await expireYesterdayArticles();
   } catch (error) {
     console.warn('⚠️ Failed to expire yesterday articles, continuing...');
   }
 
-  // 2. 随机选择5个话题
-  const selectedTopics = selectRandomTopics(5);
+  // 3. 随机选择5个话题
+  const selectedTopics = selectRandomTopics(allTopics, 5);
   console.log(`📚 Selected topics:`, selectedTopics.map(t => t.title).join(', '));
 
   // 3. 为每个话题生成文章
