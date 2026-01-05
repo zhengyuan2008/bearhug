@@ -751,42 +751,51 @@
 
     </main>
 
-    <!-- 秘密信模态框 -->
+    <!-- 情书模态框 -->
     <div class="secret-modal" id="secret-modal" style="display: none;">
       <div class="secret-modal-overlay" id="secret-modal-overlay"></div>
       <div class="secret-modal-content">
         <button class="secret-modal-close" id="secret-modal-close">✕</button>
 
-        <div class="secret-header">
-          <div class="secret-icon">💝</div>
-          <h3 class="secret-title">给🐻的一封信</h3>
+        <!-- 加载中 -->
+        <div class="love-letter-loading" id="love-letter-loading">
+          <div class="loading-spinner">💝</div>
+          <p>加载中...</p>
         </div>
 
-        <div class="secret-body">
-          <p class="secret-message">
-            🐻，我想和你分享我最近关于未来、关于我们可能有的小宝宝的一些认真思考。
-          </p>
-          <p class="secret-message">
-            写这封信不是为了给你压力，而是想让你看到：<strong>我真的很重视你</strong>，也很重视我们的未来。
-          </p>
-          <p class="secret-message">
-            我想让你知道，你的价值从来不是由"能否给我带来孩子"来定义的。
-          </p>
-          <p class="secret-message">
-            无论将来会怎样，<strong>我希望我们能一起面对</strong>。你不是一个人在承受这些，我会一直在你身边。
-          </p>
-          <p class="secret-signature">
-            — 永远爱你的胖🐰
-          </p>
+        <!-- 情书内容 -->
+        <div class="love-letter-container" id="love-letter-container" style="display: none;">
 
-          <div class="secret-pdf-section">
-            <p class="pdf-intro">这份文档里有我认真思考的所有内容：</p>
-            <a href="documents/our-future.pdf" target="_blank" class="btn-pdf-open">
-              📄 打开我的思考笔记
-            </a>
-            <p class="pdf-note">（点击在新窗口打开PDF）</p>
+          <!-- 头部 -->
+          <div class="secret-header">
+            <div class="secret-icon">💝</div>
+            <h3 class="secret-title" id="love-letter-title">给🐻的情书</h3>
+            <p class="love-letter-date" id="love-letter-date"></p>
+          </div>
+
+          <!-- 情书正文 -->
+          <div class="secret-body" id="love-letter-body">
+            <!-- 动态加载内容 -->
+          </div>
+
+          <!-- 翻页按钮 -->
+          <div class="love-letter-navigation">
+            <button class="btn-nav-letter" id="btn-prev-letter" title="上一封">
+              ← 上一封
+            </button>
+            <span class="letter-counter" id="letter-counter">1/1</span>
+            <button class="btn-nav-letter" id="btn-next-letter" title="下一封">
+              下一封 →
+            </button>
           </div>
         </div>
+
+        <!-- 错误提示 -->
+        <div class="love-letter-error" id="love-letter-error" style="display: none;">
+          <p>😔 暂时没有情书可以查看</p>
+          <p class="error-hint">胖🐰可能还没来得及写信呢</p>
+        </div>
+
       </div>
     </div>
 

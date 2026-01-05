@@ -1123,3 +1123,121 @@ async function deleteCustomDestination(id) {
     return false;
   }
 }
+
+// ========================================
+// 情书功能
+// ========================================
+
+/**
+ * 获取所有可见的情书（按日期倒序）
+ */
+async function getAllLoveLetters() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const { data, error } = await client
+      .from('love_letters')
+      .select('*')
+      .eq('is_visible', true)
+      .order('display_order', { ascending: true })
+      .order('display_date', { ascending: false });
+
+    if (error) throw error;
+    console.log('✓ Loaded love letters:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('Error loading love letters:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取单封情书
+ */
+async function getLoveLetter(id) {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const { data, error } = await client
+      .from('love_letters')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error loading love letter:', error);
+    return null;
+  }
+}
+
+/**
+ * 添加新情书
+ */
+async function addLoveLetter(letterData) {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const { data, error} = await client
+      .from('love_letters')
+      .insert([letterData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✓ Love letter added');
+    return data;
+  } catch (error) {
+    console.error('Error adding love letter:', error);
+    return null;
+  }
+}
+
+/**
+ * 更新情书
+ */
+async function updateLoveLetter(id, updates) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const { error } = await client
+      .from('love_letters')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw error;
+    console.log('✓ Love letter updated');
+    return true;
+  } catch (error) {
+    console.error('Error updating love letter:', error);
+    return false;
+  }
+}
+
+/**
+ * 删除情书（软删除）
+ */
+async function deleteLoveLetter(id) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const { error } = await client
+      .from('love_letters')
+      .update({ is_visible: false })
+      .eq('id', id);
+
+    if (error) throw error;
+    console.log('✓ Love letter deleted');
+    return true;
+  } catch (error) {
+    console.error('Error deleting love letter:', error);
+    return false;
+  }
+}
+

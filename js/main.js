@@ -2935,35 +2935,42 @@ async function randomDestination() {
 }
 
 // ========================================
-// 秘密按钮功能
+// 情书功能
 // ========================================
 
+let loveLetters = []; // 所有情书
+let currentLetterIndex = 0; // 当前显示的情书索引
+
 /**
- * 初始化秘密按钮
+ * 初始化情书按钮
  */
 function initSecretButton() {
   const secretBtn = document.getElementById('secret-heart-button');
   const secretModal = document.getElementById('secret-modal');
   const modalClose = document.getElementById('secret-modal-close');
   const modalOverlay = document.getElementById('secret-modal-overlay');
+  const btnPrev = document.getElementById('btn-prev-letter');
+  const btnNext = document.getElementById('btn-next-letter');
 
-  // 打开模态框
+  // 打开模态框并加载情书
   if (secretBtn) {
-    secretBtn.addEventListener('click', () => {
-      console.log('💝 Opening secret modal...');
+    secretBtn.addEventListener('click', async () => {
+      console.log('💝 Opening love letters modal...');
       if (secretModal) {
         secretModal.style.display = 'flex';
-        // 添加淡入动画
         setTimeout(() => {
           secretModal.style.opacity = '1';
         }, 10);
+
+        // 加载情书
+        await loadLoveLetters();
       }
     });
   }
 
-  // 关闭模态框的函数
+  // 关闭模态框
   const closeModal = () => {
-    console.log('💝 Closing secret modal...');
+    console.log('💝 Closing love letters modal...');
     if (secretModal) {
       secretModal.style.opacity = '0';
       setTimeout(() => {
@@ -2972,12 +2979,10 @@ function initSecretButton() {
     }
   };
 
-  // 点击关闭按钮
   if (modalClose) {
     modalClose.addEventListener('click', closeModal);
   }
 
-  // 点击背景遮罩
   if (modalOverlay) {
     modalOverlay.addEventListener('click', closeModal);
   }
@@ -2989,10 +2994,169 @@ function initSecretButton() {
     }
   });
 
-  console.log('✓ Secret button initialized');
+  // 翻页按钮
+  if (btnPrev) {
+    btnPrev.addEventListener('click', () => {
+      if (currentLetterIndex > 0) {
+        currentLetterIndex--;
+        displayCurrentLetter();
+      }
+    });
+  }
+
+  if (btnNext) {
+    btnNext.addEventListener('click', () => {
+      if (currentLetterIndex < loveLetters.length - 1) {
+        currentLetterIndex++;
+        displayCurrentLetter();
+      }
+    });
+  }
+
+  console.log('✓ Love letters button initialized');
 }
 
-// 页面加载完成后初始化秘密按钮
+/**
+ * 加载所有情书
+ */
+async function loadLoveLetters() {
+  const loadingDiv = document.getElementById('love-letter-loading');
+  const containerDiv = document.getElementById('love-letter-container');
+  const errorDiv = document.getElementById('love-letter-error');
+
+  // 显示加载状态
+  if (loadingDiv) loadingDiv.style.display = 'block';
+  if (containerDiv) containerDiv.style.display = 'none';
+  if (errorDiv) errorDiv.style.display = 'none';
+
+  try {
+    loveLetters = await getAllLoveLetters();
+
+    if (loveLetters && loveLetters.length > 0) {
+      currentLetterIndex = 0;
+      displayCurrentLetter();
+
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      if (containerDiv) containerDiv.style.display = 'block';
+    } else {
+      // 没有情书
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      if (errorDiv) errorDiv.style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error loading love letters:', error);
+    if (loadingDiv) loadingDiv.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'block';
+  }
+}
+
+/**
+ * 显示当前情书
+ */
+function displayCurrentLetter() {
+  if (!loveLetters || loveLetters.length === 0) return;
+
+  const letter = loveLetters[currentLetterIndex];
+  const titleEl = document.getElementById('love-letter-title');
+  const dateEl = document.getElementById('love-letter-date');
+  const bodyEl = document.getElementById('love-letter-body');
+  const counterEl = document.getElementById('letter-counter');
+  const btnPrev = document.getElementById('btn-prev-letter');
+  const btnNext = document.getElementById('btn-next-letter');
+
+  // 更新标题和日期
+  if (titleEl) titleEl.textContent = letter.title || '给🐻的情书';
+  if (dateEl) {
+    const date = new Date(letter.display_date);
+    dateEl.textContent = date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // 清空正文
+  if (bodyEl) {
+    bodyEl.innerHTML = '';
+
+    // 根据content_type显示不同内容
+    if (letter.content_type === 'text' || letter.content_type === 'mixed') {
+      if (letter.text_content) {
+        const textDiv = document.createElement('div');
+        textDiv.className = 'love-letter-text';
+        textDiv.textContent = letter.text_content;
+        bodyEl.appendChild(textDiv);
+      }
+    }
+
+    if (letter.content_type === 'image' || letter.content_type === 'mixed') {
+      if (letter.image_urls && letter.image_urls.length > 0) {
+        const imagesDiv = document.createElement('div');
+        imagesDiv.className = 'love-letter-images';
+
+        letter.image_urls.forEach(url => {
+          const img = document.createElement('img');
+          img.src = url;
+          img.className = 'love-letter-image';
+          img.alt = letter.title;
+          img.addEventListener('click', () => {
+            window.open(url, '_blank');
+          });
+          imagesDiv.appendChild(img);
+        });
+
+        bodyEl.appendChild(imagesDiv);
+      }
+    }
+
+    if (letter.content_type === 'pdf' || letter.content_type === 'mixed') {
+      if (letter.pdf_url) {
+        const pdfDiv = document.createElement('div');
+        pdfDiv.className = 'love-letter-pdf secret-pdf-section';
+        pdfDiv.innerHTML = `
+          <p class="pdf-intro">查看完整文档：</p>
+          <a href="${letter.pdf_url}" target="_blank" class="btn-pdf-open">
+            📄 打开文档
+          </a>
+          <p class="pdf-note">（点击在新窗口打开）</p>
+        `;
+        bodyEl.appendChild(pdfDiv);
+      }
+    }
+
+    // 显示标签
+    if (letter.tags && letter.tags.length > 0) {
+      const tagsDiv = document.createElement('div');
+      tagsDiv.className = 'love-letter-tags';
+
+      letter.tags.forEach(tag => {
+        const tagSpan = document.createElement('span');
+        tagSpan.className = 'tag';
+        tagSpan.textContent = tag;
+        tagsDiv.appendChild(tagSpan);
+      });
+
+      bodyEl.appendChild(tagsDiv);
+    }
+  }
+
+  // 更新计数器
+  if (counterEl) {
+    counterEl.textContent = `${currentLetterIndex + 1}/${loveLetters.length}`;
+  }
+
+  // 更新按钮状态
+  if (btnPrev) {
+    btnPrev.disabled = currentLetterIndex === 0;
+  }
+  if (btnNext) {
+    btnNext.disabled = currentLetterIndex === loveLetters.length - 1;
+  }
+
+  console.log('✓ Displaying letter:', letter.title);
+}
+
+// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
   initSecretButton();
 });

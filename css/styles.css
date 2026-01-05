@@ -3326,6 +3326,149 @@ body::before {
   margin: 12px 0 0 0;
 }
 
+/* 情书加载和错误状态 */
+.love-letter-loading {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.love-letter-loading .loading-spinner {
+  font-size: 48px;
+  animation: heartbeat 1.5s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+.love-letter-loading p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.love-letter-error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.love-letter-error p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 8px 0;
+}
+
+.error-hint {
+  font-size: 13px !important;
+  color: var(--text-soft) !important;
+}
+
+/* 情书容器 */
+.love-letter-container {
+  animation: fadeIn 0.3s ease;
+}
+
+.love-letter-date {
+  font-size: 13px;
+  color: var(--text-soft);
+  text-align: center;
+  margin: 8px 0 0 0;
+}
+
+/* 情书导航 */
+.love-letter-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.btn-nav-letter {
+  flex: 1;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.08);
+  color: var(--primary-dark);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-nav-letter:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-nav-letter:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.letter-counter {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* 不同类型内容的样式 */
+.love-letter-text {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+}
+
+.love-letter-images {
+  margin: 20px 0;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.love-letter-image {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.love-letter-image:hover {
+  transform: scale(1.02);
+}
+
+.love-letter-pdf {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1.5px solid rgba(168, 85, 247, 0.2);
+  text-align: center;
+}
+
+.love-letter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.1);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 /* 响应式调整 */
 @media (max-width: 580px) {
   .secret-modal-content {
