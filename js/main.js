@@ -289,8 +289,11 @@ function updatePhotoAndMessage(messageArray = null) {
 /**
  * "再抱我一下" 按钮点击
  */
-function handleHugClick() {
+async function handleHugClick() {
   updatePhotoAndMessage();
+
+  // 记录拥抱
+  await recordHug();
 }
 
 /**
@@ -817,30 +820,7 @@ function bindEvents() {
     console.log('✓ 绑定了解锁目的地按钮');
   }
 
-  // Work Troubles Tab
-  const btnWorkBack = document.getElementById('btn-work-back');
-  if (btnWorkBack) {
-    btnWorkBack.onclick = backToScenarios;
-    console.log('✓ 绑定了工作烦恼返回按钮');
-  }
-
-  const aiModalClose = document.getElementById('ai-modal-close');
-  if (aiModalClose) {
-    aiModalClose.onclick = closeAIModal;
-    console.log('✓ 绑定了AI模态框关闭按钮');
-  }
-
-  const aiModalOverlay = document.getElementById('ai-modal-overlay');
-  if (aiModalOverlay) {
-    aiModalOverlay.onclick = closeAIModal;
-    console.log('✓ 绑定了AI模态框遮罩层');
-  }
-
-  const btnCopyAI = document.getElementById('btn-copy-ai');
-  if (btnCopyAI) {
-    btnCopyAI.onclick = copyAIEnhancedText;
-    console.log('✓ 绑定了AI复制按钮');
-  }
+  // Work Troubles Tab - removed old bindings (now handled in initWorkTroublesTab)
 
   // Mindset Tab
   const btnRefreshMindset = document.getElementById('btn-refresh-mindset');
@@ -1009,13 +989,16 @@ async function loadMoodReview() {
     // 从Supabase获取过去7天的情绪记录
     const records = await getEmotionHistory(7);
 
-    if (!records || records.length === 0) {
+    // 获取过去7天的拥抱记录（详细记录，不只是统计）
+    const hugRecords = await getRecentHugRecords(7);
+
+    if ((!records || records.length === 0) && (!hugRecords || hugRecords.length === 0)) {
       listElement.innerHTML = '<p class="mood-review-empty">还没有心情记录哦，点击上面的情绪按钮记录你的心情吧 💝</p>';
       return;
     }
 
-    // 按天分组
-    const groupedByDay = groupRecordsByDay(records);
+    // 按天分组（包含拥抱记录）
+    const groupedByDay = groupRecordsByDay(records, hugRecords);
 
     // 生成HTML
     listElement.innerHTML = generateMoodReviewHTML(groupedByDay);
@@ -1028,12 +1011,12 @@ async function loadMoodReview() {
 /**
  * 按天分组记录
  */
-function groupRecordsByDay(records) {
+function groupRecordsByDay(records, hugRecords = []) {
   const groups = {};
   const today = getTodayString();
 
+  // 处理情绪记录
   records.forEach(record => {
-    // 解析时间（Supabase返回的是UTC时间）
     const date = new Date(record.created_at);
     const dateString = formatDate(date);
 
@@ -1047,7 +1030,28 @@ function groupRecordsByDay(records) {
 
     groups[dateString].records.push({
       time: date,
+      type: 'emotion',
       emotionType: record.event_data?.emotion_type || 'unknown'
+    });
+  });
+
+  // 处理拥抱记录
+  hugRecords.forEach(record => {
+    const date = new Date(record.hugged_at);
+    const dateString = formatDate(date);
+
+    if (!groups[dateString]) {
+      groups[dateString] = {
+        date: dateString,
+        isToday: dateString === today,
+        records: []
+      };
+    }
+
+    groups[dateString].records.push({
+      time: date,
+      type: 'hug',
+      emotionType: 'hug'
     });
   });
 
@@ -1069,7 +1073,8 @@ function generateMoodReviewHTML(groupedData) {
     sad: { emoji: '🖤', text: '难过' },
     scared: { emoji: '🌧', text: '有点怕' },
     okay: { emoji: '🧡', text: '还好' },
-    fight: { emoji: '💔', text: '和胖🐰吵架了' }
+    fight: { emoji: '💔', text: '和胖🐰吵架了' },
+    hug: { emoji: '🤍', text: '再抱我一下' }
   };
 
   let html = '';
@@ -1087,12 +1092,13 @@ function generateMoodReviewHTML(groupedData) {
     });
 
     // 生成统计文本
-    const statsText = Object.entries(stats)
+    let statsItems = Object.entries(stats)
       .map(([type, count]) => {
         const config = emotionConfig[type] || { emoji: '❓', text: '未知' };
         return `${config.emoji}×${count}`;
-      })
-      .join('  ');
+      });
+
+    const statsText = statsItems.join('  ');
 
     html += `
       <div class="mood-review-day">
@@ -1323,11 +1329,6 @@ let snackHistory = [];
 
 // Custom Destinations State
 let customDestinations = [];
-
-// Work Troubles State
-let workScenarios = [];
-let currentScenario = null;
-let workPhrases = [];
 
 // Mindset State
 let mindsetTopics = [];
@@ -1799,282 +1800,227 @@ document.addEventListener('DOMContentLoaded', initUI);
 async function initWorkTroublesTab() {
   console.log('=== Initializing Work Troubles Tab ===');
 
-  // Load scenarios
-  workScenarios = await getWorkScenarios();
+  // 绑定所有工作烦恼按钮
+  bindWorkTroubleButtons();
 
-  // Render scenario grid
-  renderScenarioGrid();
+  // 加载今日统计并更新按钮计数
+  await loadTodayWorkTroubleStats();
 
-  // Ensure detail view is hidden
-  const detailView = document.getElementById('work-scenario-detail');
-  if (detailView) detailView.style.display = 'none';
+  // 绑定历史记录按钮
+  const btnShowHistory = document.getElementById('btn-show-work-history');
+  const btnCloseHistory = document.getElementById('btn-close-work-history');
 
-  const scenariosGrid = document.getElementById('work-scenarios-grid');
-  if (scenariosGrid) scenariosGrid.style.display = 'grid';
+  if (btnShowHistory) {
+    btnShowHistory.onclick = showWorkTroubleHistory;
+  }
+
+  if (btnCloseHistory) {
+    btnCloseHistory.onclick = closeWorkTroubleHistory;
+  }
+
+  console.log('✓ Work troubles tab initialized');
 }
 
 /**
- * 渲染场景网格
+ * 绑定工作烦恼按钮
  */
-function renderScenarioGrid() {
-  const grid = document.getElementById('work-scenarios-grid');
-  if (!grid) return;
+function bindWorkTroubleButtons() {
+  const buttons = document.querySelectorAll('.btn-work-trouble');
 
-  if (workScenarios.length === 0) {
-    grid.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">暂无可用场景</p>';
-    return;
-  }
-
-  grid.innerHTML = workScenarios.map(scenario => `
-    <div class="scenario-card" data-scenario-id="${scenario.id}">
-      <div class="scenario-icon">${scenario.icon}</div>
-      <p class="scenario-name">${scenario.name}</p>
-    </div>
-  `).join('');
-
-  // Bind click events
-  grid.querySelectorAll('.scenario-card').forEach(card => {
-    card.onclick = () => {
-      const scenarioId = card.getAttribute('data-scenario-id');
-      selectScenario(scenarioId);
+  buttons.forEach(button => {
+    button.onclick = async () => {
+      const troubleType = button.getAttribute('data-trouble');
+      await handleWorkTroubleClick(troubleType, button);
     };
   });
 
-  console.log('✓ Rendered', workScenarios.length, 'scenarios');
+  console.log('✓ Bound', buttons.length, 'work trouble buttons');
 }
 
 /**
- * 选择场景
+ * 处理工作烦恼按钮点击
  */
-async function selectScenario(scenarioId) {
-  console.log('=== Selecting scenario:', scenarioId);
+async function handleWorkTroubleClick(troubleType, buttonElement) {
+  try {
+    // 记录到数据库
+    const recorded = await recordWorkTrouble(troubleType);
 
-  // Find scenario
-  currentScenario = workScenarios.find(s => s.id === scenarioId);
-  if (!currentScenario) {
-    showToast('场景加载失败');
-    return;
+    if (recorded) {
+      // 更新按钮上的计数显示
+      const countSpan = buttonElement.querySelector('.trouble-count');
+      if (countSpan) {
+        const currentCount = parseInt(countSpan.textContent) || 0;
+        countSpan.textContent = currentCount + 1;
+      }
+
+      // 添加点击动画效果
+      buttonElement.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        buttonElement.style.transform = '';
+      }, 150);
+
+      console.log('✓ Recorded work trouble:', troubleType);
+    }
+  } catch (error) {
+    console.error('Error recording work trouble:', error);
+    showToast('记录失败，请重试');
   }
-
-  // Load phrases
-  workPhrases = await getWorkPhrases(scenarioId);
-
-  // Update UI
-  const title = document.getElementById('scenario-detail-title');
-  const desc = document.getElementById('scenario-detail-desc');
-
-  if (title) title.textContent = `${currentScenario.icon} ${currentScenario.name}`;
-  if (desc) desc.textContent = currentScenario.description || '';
-
-  // Render phrases
-  renderPhraseCategories();
-
-  // Show detail view
-  document.getElementById('work-scenarios-grid').style.display = 'none';
-  document.getElementById('work-scenario-detail').style.display = 'block';
-
-  // Log interaction
-  saveWorkTroubleLog(scenarioId, [], null);
 }
 
 /**
- * 渲染话术分类
+ * 加载今日统计
  */
-function renderPhraseCategories() {
-  const container = document.getElementById('phrase-categories-container');
-  if (!container) return;
+async function loadTodayWorkTroubleStats() {
+  try {
+    const stats = await getTodayWorkTroubles();
+    console.log('✓ Today work trouble stats:', stats);
 
-  // Group phrases by type
-  const phrasesByType = {
-    comfort: workPhrases.filter(p => p.phrase_type === 'comfort'),
-    strategy: workPhrases.filter(p => p.phrase_type === 'strategy'),
-    script: workPhrases.filter(p => p.phrase_type === 'script'),
-    support: workPhrases.filter(p => p.phrase_type === 'support')
+    // 更新所有按钮的计数显示
+    Object.entries(stats).forEach(([troubleType, count]) => {
+      const countSpan = document.querySelector(`[data-count="${troubleType}"]`);
+      if (countSpan) {
+        countSpan.textContent = count;
+      }
+    });
+  } catch (error) {
+    console.error('Error loading today work trouble stats:', error);
+  }
+}
+
+/**
+ * 显示历史记录
+ */
+async function showWorkTroubleHistory() {
+  const historyContent = document.getElementById('work-troubles-history-content');
+  if (!historyContent) return;
+
+  historyContent.style.display = 'block';
+
+  // 加载历史数据
+  await loadWorkTroubleHistoryData();
+}
+
+/**
+ * 关闭历史记录
+ */
+function closeWorkTroubleHistory() {
+  const historyContent = document.getElementById('work-troubles-history-content');
+  if (historyContent) {
+    historyContent.style.display = 'none';
+  }
+}
+
+/**
+ * 加载历史记录数据
+ */
+async function loadWorkTroubleHistoryData() {
+  const listElement = document.getElementById('work-troubles-history-list');
+  if (!listElement) return;
+
+  // 显示加载状态
+  listElement.innerHTML = '<p class="work-troubles-history-loading">正在加载...</p>';
+
+  try {
+    // 获取过去7天的记录
+    const records = await getWorkTroubleHistory(7);
+    console.log('✓ Loaded work trouble history:', records.length, 'records');
+
+    if (!records || records.length === 0) {
+      listElement.innerHTML = '<p class="work-troubles-history-loading">还没有记录</p>';
+      return;
+    }
+
+    // 按天分组
+    const groupedByDay = groupWorkTroublesByDay(records);
+
+    // 生成HTML
+    listElement.innerHTML = generateWorkTroubleHistoryHTML(groupedByDay);
+  } catch (error) {
+    console.error('Error loading work trouble history:', error);
+    listElement.innerHTML = '<p class="work-troubles-history-loading">加载失败，请重试</p>';
+  }
+}
+
+/**
+ * 按天分组工作烦恼记录
+ */
+function groupWorkTroublesByDay(records) {
+  const groups = {};
+  const today = getTodayString();
+
+  records.forEach(record => {
+    const date = new Date(record.recorded_at);
+    const dateString = formatDate(date);
+
+    if (!groups[dateString]) {
+      groups[dateString] = {
+        date: dateString,
+        isToday: dateString === today,
+        troubles: {}
+      };
+    }
+
+    const troubleType = record.trouble_type;
+    groups[dateString].troubles[troubleType] = (groups[dateString].troubles[troubleType] || 0) + 1;
+  });
+
+  // 按日期倒序排列
+  return Object.values(groups).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/**
+ * 生成历史记录HTML
+ */
+function generateWorkTroubleHistoryHTML(groupedData) {
+  // 按钮的emoji映射
+  const emojiMap = {
+    '会议太多': '📅',
+    '想到T就不开心': '😤',
+    '都是MQE的错': '🔧',
+    '我们为什么不能有好的CE': '🤦',
+    '老板不够重视': '👔',
+    'issue太多看不过来': '🐛',
+    'vendor不给力': '🤝',
+    '我的话没被听到': '🔇',
+    'Pack PD煞笔': '📦',
+    'Cell PD脑残': '🔋',
+    'EPM不懂': '📊',
+    'System过分': '⚙️'
   };
 
-  const categoryNames = {
-    comfort: { icon: '💝', name: '情感安慰' },
-    strategy: { icon: '💡', name: '应对策略' },
-    script: { icon: '💬', name: '对话话术' },
-    support: { icon: '🌟', name: '鼓励支持' }
-  };
+  let html = '';
 
-  container.innerHTML = Object.entries(phrasesByType).map(([type, phrases]) => {
-    if (phrases.length === 0) return '';
+  groupedData.forEach(day => {
+    const dateObj = new Date(day.date + 'T00:00:00');
+    const monthDay = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const dayName = dayNames[dateObj.getDay()];
+    const dayTitle = day.isToday ? `今天 (${monthDay} ${dayName})` : `${monthDay} ${dayName}`;
 
-    const category = categoryNames[type];
-    return `
-      <div class="phrase-category">
-        <button class="category-header" data-category="${type}">
-          <span><span class="category-icon">${category.icon}</span>${category.name}</span>
-          <span class="category-arrow">▼</span>
-        </button>
-        <div class="category-content">
-          ${phrases.map(phrase => `
-            <div class="phrase-item" data-phrase-id="${phrase.id}">
-              <p class="phrase-text">${phrase.content}</p>
-              <div class="phrase-actions">
-                <button class="btn-copy" data-action="copy" data-phrase-id="${phrase.id}">
-                  📋 复制
-                </button>
-                <button class="btn-ai-polish" data-action="ai" data-phrase-id="${phrase.id}">
-                  ✨ AI润色
-                </button>
-                <button class="btn-helpful" data-action="helpful" data-phrase-id="${phrase.id}">
-                  ♥ 有用
-                </button>
-              </div>
-            </div>
-          `).join('')}
+    // 生成统计项
+    const statsItems = Object.entries(day.troubles).map(([troubleType, count]) => {
+      const emoji = emojiMap[troubleType] || '❓';
+      return `
+        <div class="work-troubles-stat-item">
+          <span class="work-troubles-stat-emoji">${emoji}</span>
+          <span>${troubleType} ×${count}</span>
+        </div>
+      `;
+    }).join('');
+
+    html += `
+      <div class="work-troubles-history-day">
+        <div class="work-troubles-history-day-header">
+          <div class="work-troubles-day-date">${dayTitle}</div>
+        </div>
+        <div class="work-troubles-day-stats">
+          ${statsItems}
         </div>
       </div>
     `;
-  }).join('');
-
-  // Bind events
-  bindPhraseEvents();
-}
-
-/**
- * 绑定话术事件
- */
-function bindPhraseEvents() {
-  // Category toggle
-  document.querySelectorAll('.category-header').forEach(header => {
-    header.onclick = () => toggleCategory(header);
   });
 
-  // Phrase actions
-  document.querySelectorAll('.phrase-actions button').forEach(btn => {
-    const action = btn.getAttribute('data-action');
-    const phraseId = btn.getAttribute('data-phrase-id');
-
-    if (action === 'copy') {
-      btn.onclick = () => copyPhrase(phraseId);
-    } else if (action === 'ai') {
-      btn.onclick = () => requestAIPolish(phraseId);
-    } else if (action === 'helpful') {
-      btn.onclick = (e) => markPhraseHelpful(phraseId, e.target);
-    }
-  });
-}
-
-/**
- * 切换分类展开/收起
- */
-function toggleCategory(headerElement) {
-  const content = headerElement.nextElementSibling;
-
-  if (content.classList.contains('expanded')) {
-    content.classList.remove('expanded');
-    headerElement.classList.remove('expanded');
-  } else {
-    content.classList.add('expanded');
-    headerElement.classList.add('expanded');
-  }
-}
-
-/**
- * 复制话术到剪贴板
- */
-async function copyPhrase(phraseId) {
-  const phrase = workPhrases.find(p => p.id === phraseId);
-  if (!phrase) return;
-
-  try {
-    await navigator.clipboard.writeText(phrase.content);
-    showToast('✅ 已复制到剪贴板');
-  } catch (error) {
-    console.error('Copy failed:', error);
-    showToast('复制失败，请手动选择文字复制');
-  }
-}
-
-/**
- * 请求AI润色
- */
-async function requestAIPolish(phraseId) {
-  const phrase = workPhrases.find(p => p.id === phraseId);
-  if (!phrase || !currentScenario) return;
-
-  // Show modal
-  const modal = document.getElementById('ai-modal');
-  const loading = document.getElementById('ai-loading');
-  const result = document.getElementById('ai-result');
-
-  if (modal) modal.style.display = 'flex';
-  if (loading) loading.style.display = 'block';
-  if (result) result.style.display = 'none';
-
-  try {
-    const enhanced = await enhancePhraseWithAI(
-      phrase.content,
-      currentScenario.name,
-      currentScenario.description || ''
-    );
-
-    // Show result
-    const textEl = document.getElementById('ai-enhanced-text');
-    if (textEl) textEl.textContent = enhanced;
-
-    if (loading) loading.style.display = 'none';
-    if (result) result.style.display = 'block';
-
-    // Log with AI response
-    saveWorkTroubleLog(currentScenario.id, [phraseId], enhanced);
-
-  } catch (error) {
-    console.error('AI enhancement failed:', error);
-    closeAIModal();
-    showToast('AI润色失败，请稍后重试');
-  }
-}
-
-/**
- * 标记话术为有用
- */
-function markPhraseHelpful(phraseId, buttonElement) {
-  buttonElement.classList.toggle('marked');
-  const isMarked = buttonElement.classList.contains('marked');
-
-  if (isMarked) {
-    showToast('❤️ 已标记为有用');
-  }
-}
-
-/**
- * 返回场景选择
- */
-function backToScenarios() {
-  document.getElementById('work-scenario-detail').style.display = 'none';
-  document.getElementById('work-scenarios-grid').style.display = 'grid';
-  currentScenario = null;
-  workPhrases = [];
-}
-
-/**
- * 关闭AI模态框
- */
-function closeAIModal() {
-  const modal = document.getElementById('ai-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-/**
- * 复制AI润色后的文本
- */
-async function copyAIEnhancedText() {
-  const textEl = document.getElementById('ai-enhanced-text');
-  if (!textEl) return;
-
-  try {
-    await navigator.clipboard.writeText(textEl.textContent);
-    showToast('✅ 已复制到剪贴板');
-    closeAIModal();
-  } catch (error) {
-    console.error('Copy failed:', error);
-    showToast('复制失败，请手动选择文字复制');
-  }
+  return html;
 }
 
 // ========================================

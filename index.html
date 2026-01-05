@@ -13,8 +13,8 @@
   <link rel="preload" href="js/fireworks.js" as="script" />
   
   <!-- 样式表 -->
-  <link rel="stylesheet" href="css/styles.css?v=4" />
-  
+  <link rel="stylesheet" href="css/styles.css?v=5" />
+
   <!-- iOS Safari 优化 -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -650,44 +650,92 @@
         <!-- 欢迎区域 -->
         <section class="glass-mini-card work-troubles-welcome">
           <h2 class="section-title">💼 今天工作上遇到什么烦心事了吗？</h2>
-          <p class="section-description">选择一个场景，我来帮你想想办法 🫂</p>
+          <p class="section-description">点一下，记录下来就好 🫂</p>
         </section>
 
-        <!-- 场景选择网格 -->
-        <section class="work-troubles-scenarios" id="work-scenarios-grid">
-          <!-- 动态加载场景卡片 -->
+        <!-- 工作烦恼按钮网格 -->
+        <section class="work-troubles-buttons glass-mini-card" id="work-troubles-buttons">
+          <button class="btn-work-trouble" data-trouble="会议太多">
+            <span class="trouble-emoji">📅</span>
+            <span class="trouble-text">会议太多</span>
+            <span class="trouble-count" data-count="会议太多">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="想到T就不开心">
+            <span class="trouble-emoji">😤</span>
+            <span class="trouble-text">想到T就不开心</span>
+            <span class="trouble-count" data-count="想到T就不开心">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="都是MQE的错">
+            <span class="trouble-emoji">🔧</span>
+            <span class="trouble-text">都是MQE的错</span>
+            <span class="trouble-count" data-count="都是MQE的错">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="我们为什么不能有好的CE">
+            <span class="trouble-emoji">🤦</span>
+            <span class="trouble-text">为啥不能有好CE</span>
+            <span class="trouble-count" data-count="我们为什么不能有好的CE">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="老板不够重视">
+            <span class="trouble-emoji">👔</span>
+            <span class="trouble-text">老板不够重视</span>
+            <span class="trouble-count" data-count="老板不够重视">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="issue太多看不过来">
+            <span class="trouble-emoji">🐛</span>
+            <span class="trouble-text">issue太多</span>
+            <span class="trouble-count" data-count="issue太多看不过来">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="vendor不给力">
+            <span class="trouble-emoji">🤝</span>
+            <span class="trouble-text">vendor不给力</span>
+            <span class="trouble-count" data-count="vendor不给力">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="我的话没被听到">
+            <span class="trouble-emoji">🔇</span>
+            <span class="trouble-text">我的话没被听到</span>
+            <span class="trouble-count" data-count="我的话没被听到">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="Pack PD煞笔">
+            <span class="trouble-emoji">📦</span>
+            <span class="trouble-text">Pack PD煞笔</span>
+            <span class="trouble-count" data-count="Pack PD煞笔">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="Cell PD脑残">
+            <span class="trouble-emoji">🔋</span>
+            <span class="trouble-text">Cell PD脑残</span>
+            <span class="trouble-count" data-count="Cell PD脑残">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="EPM不懂">
+            <span class="trouble-emoji">📊</span>
+            <span class="trouble-text">EPM不懂</span>
+            <span class="trouble-count" data-count="EPM不懂">0</span>
+          </button>
+          <button class="btn-work-trouble" data-trouble="System过分">
+            <span class="trouble-emoji">⚙️</span>
+            <span class="trouble-text">System过分</span>
+            <span class="trouble-count" data-count="System过分">0</span>
+          </button>
         </section>
 
-        <!-- 场景详情视图 -->
-        <section class="work-troubles-detail glass-mini-card" id="work-scenario-detail" style="display: none;">
-          <button class="btn-back" id="btn-work-back">← 返回选择场景</button>
-          <div class="scenario-detail-header">
-            <h3 class="scenario-detail-title" id="scenario-detail-title"></h3>
-            <p class="scenario-detail-desc" id="scenario-detail-desc"></p>
-          </div>
+        <!-- 查看历史按钮 -->
+        <section class="work-troubles-history-section">
+          <button class="btn-show-work-history" id="btn-show-work-history">
+            📊 查看历史记录
+          </button>
 
-          <!-- 话术分类 -->
-          <div class="phrase-categories" id="phrase-categories-container">
-            <!-- 动态加载分类和话术 -->
-          </div>
-        </section>
-
-        <!-- AI润色模态框 -->
-        <div class="ai-enhancement-modal" id="ai-modal" style="display: none;">
-          <div class="ai-modal-overlay" id="ai-modal-overlay"></div>
-          <div class="ai-modal-content">
-            <button class="ai-modal-close" id="ai-modal-close">✕</button>
-            <h4 class="ai-modal-title">✨ AI正在为你个性化这段话...</h4>
-            <div class="ai-loading" id="ai-loading">
-              <div class="loading-spinner">⏳</div>
-              <p>请稍候...</p>
+          <!-- 历史记录展开区域 -->
+          <div class="work-troubles-history-content" id="work-troubles-history-content" style="display: none;">
+            <div class="work-troubles-history-header">
+              <h3>📅 工作烦恼历史</h3>
+              <button class="btn-close-work-history" id="btn-close-work-history">✕</button>
             </div>
-            <div class="ai-result" id="ai-result" style="display: none;">
-              <p class="ai-enhanced-text" id="ai-enhanced-text"></p>
-              <button class="btn-main" id="btn-copy-ai">📋 复制到剪贴板</button>
+
+            <!-- 历史记录列表 -->
+            <div class="work-troubles-history-list" id="work-troubles-history-list">
+              <p class="work-troubles-history-loading">正在加载...</p>
             </div>
           </div>
-        </div>
+        </section>
 
       </div>
       <!-- 工作烦恼Tab内容结束 -->
@@ -811,23 +859,29 @@
   
   <!-- JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js?v=3"></script>
-  <script src="js/supabase-db.js?v=3"></script>
-  <script src="js/config.js?v=3"></script>
+  <script src="js/supabase-config.js?v=5"></script>
+  <script src="js/supabase-db.js?v=5"></script>
+  <script src="js/config.js?v=5"></script>
   <script src="js/openai-config.js?v=5"></script>
-  <script src="js/main.js?v=4"></script>
+  <script src="js/main.js?v=6"></script>
   <script src="js/fireworks.js?v=3"></script>
   <script>
-    // 立即测试
-    console.log('=== JavaScript已加载 ===');
-    console.log('CONFIG对象存在:', typeof CONFIG !== 'undefined');
-    console.log('当前时间:', new Date().toISOString());
+    // 等待所有脚本加载完成后再初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('=== JavaScript已加载 ===');
+      console.log('CONFIG对象存在:', typeof CONFIG !== 'undefined');
+      console.log('当前时间:', new Date().toISOString());
 
-    // 初始化Supabase
-    if (typeof initSupabase === 'function') {
-      initSupabase();
-      initDatabaseSync();
-    }
+      // 初始化Supabase
+      if (typeof initSupabase === 'function') {
+        initSupabase();
+        if (typeof initDatabaseSync === 'function') {
+          initDatabaseSync();
+        } else {
+          console.warn('initDatabaseSync function not found');
+        }
+      }
+    });
   </script>
   
 </body>

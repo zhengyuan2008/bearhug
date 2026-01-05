@@ -1241,3 +1241,215 @@ async function deleteLoveLetter(id) {
   }
 }
 
+// ========================================
+// 拥抱记录功能
+// ========================================
+
+/**
+ * 记录一次拥抱
+ */
+async function recordHug(mood = null) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const { error } = await client
+      .from('hug_records')
+      .insert([{
+        hugged_at: new Date().toISOString(),
+        mood: mood
+      }]);
+
+    if (error) throw error;
+    console.log('✓ Hug recorded');
+    return true;
+  } catch (error) {
+    console.error('Error recording hug:', error);
+    return false;
+  }
+}
+
+/**
+ * 获取今日拥抱次数
+ */
+async function getTodayHugCount() {
+  const client = getSupabase();
+  if (!client) return 0;
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error, count } = await client
+      .from('hug_records')
+      .select('*', { count: 'exact', head: true })
+      .gte('hugged_at', `${today}T00:00:00`)
+      .lt('hugged_at', `${today}T23:59:59`);
+
+    if (error) throw error;
+    console.log('✓ Today hug count:', count || 0);
+    return count || 0;
+  } catch (error) {
+    console.error('Error getting today hug count:', error);
+    return 0;
+  }
+}
+
+/**
+ * 获取总拥抱次数
+ */
+async function getTotalHugCount() {
+  const client = getSupabase();
+  if (!client) return 0;
+
+  try {
+    const { data, error, count } = await client
+      .from('hug_records')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) throw error;
+    console.log('✓ Total hug count:', count || 0);
+    return count || 0;
+  } catch (error) {
+    console.error('Error getting total hug count:', error);
+    return 0;
+  }
+}
+
+/**
+ * 获取每日拥抱统计（最近7天）
+ */
+async function getRecentHugStats(days = 7) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const { data, error } = await client
+      .from('daily_hug_stats')
+      .select('*')
+      .gte('date', startDate.toISOString().split('T')[0])
+      .order('date', { ascending: false })
+      .limit(days);
+
+    if (error) throw error;
+    console.log('✓ Recent hug stats loaded:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('Error loading hug stats:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取过去N天的详细拥抱记录（用于时间线显示）
+ */
+async function getRecentHugRecords(days = 7) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const { data, error } = await client
+      .from('hug_records')
+      .select('*')
+      .gte('hugged_at', startDate.toISOString())
+      .order('hugged_at', { ascending: false });
+
+    if (error) throw error;
+    console.log('✓ Loaded hug records:', data?.length || 0, 'records');
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching hug records:', error);
+    return [];
+  }
+}
+
+// ========================================
+// 工作烦恼记录
+// ========================================
+
+/**
+ * 记录工作烦恼
+ */
+async function recordWorkTrouble(troubleType) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const { error } = await client
+      .from('work_trouble_records')
+      .insert([{
+        trouble_type: troubleType,
+        recorded_at: new Date().toISOString()
+      }]);
+
+    if (error) throw error;
+    console.log('✓ Work trouble recorded:', troubleType);
+    return true;
+  } catch (error) {
+    console.error('Error recording work trouble:', error);
+    return false;
+  }
+}
+
+/**
+ * 获取今天的工作烦恼统计
+ */
+async function getTodayWorkTroubles() {
+  const client = getSupabase();
+  if (!client) return {};
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await client
+      .from('work_trouble_records')
+      .select('trouble_type')
+      .gte('recorded_at', `${today}T00:00:00`)
+      .lt('recorded_at', `${today}T23:59:59`);
+
+    if (error) throw error;
+
+    // 统计每种类型的次数
+    const stats = {};
+    (data || []).forEach(record => {
+      stats[record.trouble_type] = (stats[record.trouble_type] || 0) + 1;
+    });
+
+    console.log('✓ Today work troubles loaded:', Object.keys(stats).length, 'types');
+    return stats;
+  } catch (error) {
+    console.error('Error loading today work troubles:', error);
+    return {};
+  }
+}
+
+/**
+ * 获取最近N天的工作烦恼历史
+ */
+async function getWorkTroubleHistory(days = 7) {
+  const client = getSupabase();
+  if (!client) return [];
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const { data, error } = await client
+      .from('work_trouble_records')
+      .select('*')
+      .gte('recorded_at', startDate.toISOString())
+      .order('recorded_at', { ascending: false });
+
+    if (error) throw error;
+    console.log('✓ Work trouble history loaded:', data?.length || 0, 'records');
+    return data || [];
+  } catch (error) {
+    console.error('Error loading work trouble history:', error);
+    return [];
+  }
+}
