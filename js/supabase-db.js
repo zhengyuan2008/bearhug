@@ -1484,36 +1484,68 @@ async function getWorkTroubleHistory(days = 7) {
  */
 async function deleteLatestWorkTrouble(troubleType) {
   const client = getSupabase();
-  if (!client) return false;
+  if (!client) {
+    console.warn('Supabase client not available');
+    return false;
+  }
 
   try {
+    console.log('=== 开始删除最新工作烦恼记录 ===');
+    console.log('烦恼类型:', troubleType);
+
     // 先查询最新的一条记录
-    const { data, error: queryError } = await client
+    const { data: latest, error: fetchError } = await client
       .from('work_trouble_records')
-      .select('id')
+      .select('*')
       .eq('trouble_type', troubleType)
       .order('recorded_at', { ascending: false })
-      .limit(1);
+      .limit(1)
+      .single();
 
-    if (queryError) throw queryError;
+    if (fetchError) {
+      console.error('查询最新记录失败:', fetchError);
+      throw fetchError;
+    }
 
-    if (!data || data.length === 0) {
-      console.warn('No record found to delete for:', troubleType);
+    if (!latest) {
+      console.warn('没有找到要删除的记录:', troubleType);
       return false;
     }
+
+    console.log('找到最新记录:', {
+      id: latest.id,
+      trouble_type: latest.trouble_type,
+      recorded_at: latest.recorded_at
+    });
 
     // 删除这条记录
     const { error: deleteError } = await client
       .from('work_trouble_records')
       .delete()
-      .eq('id', data[0].id);
+      .eq('id', latest.id);
 
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error('删除记录失败:', deleteError);
+      throw deleteError;
+    }
 
-    console.log('✓ Latest work trouble deleted:', troubleType);
+    console.log('✓ 已成功从数据库删除记录 ID:', latest.id);
+
+    // 验证删除
+    const { data: verify, error: verifyError } = await client
+      .from('work_trouble_records')
+      .select('id')
+      .eq('id', latest.id);
+
+    if (!verifyError && verify && verify.length === 0) {
+      console.log('✓ 验证成功：记录已从数据库删除');
+    } else {
+      console.warn('⚠️ 验证警告：记录可能仍然存在', verify);
+    }
+
     return true;
   } catch (error) {
-    console.error('Error deleting latest work trouble:', error);
+    console.error('删除期间发生错误:', error);
     return false;
   }
 }

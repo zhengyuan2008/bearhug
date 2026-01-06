@@ -1878,8 +1878,11 @@ async function handleWorkTroubleAdd(troubleType, itemElement) {
 
       // 如果历史记录面板是打开的，刷新历史记录
       const historyContent = document.getElementById('work-troubles-history-content');
-      if (historyContent && historyContent.style.display !== 'none') {
-        await loadWorkTroubleHistoryData();
+      if (historyContent) {
+        const isVisible = window.getComputedStyle(historyContent).display !== 'none';
+        if (isVisible) {
+          await loadWorkTroubleHistoryData();
+        }
       }
 
       console.log('✓ Added work trouble:', troubleType);
@@ -1923,8 +1926,11 @@ async function handleWorkTroubleMinus(troubleType, itemElement) {
 
       // 如果历史记录面板是打开的，刷新历史记录
       const historyContent = document.getElementById('work-troubles-history-content');
-      if (historyContent && historyContent.style.display !== 'none') {
-        await loadWorkTroubleHistoryData();
+      if (historyContent) {
+        const isVisible = window.getComputedStyle(historyContent).display !== 'none';
+        if (isVisible) {
+          await loadWorkTroubleHistoryData();
+        }
       }
 
       console.log('✓ Removed work trouble:', troubleType);
