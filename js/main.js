@@ -1825,20 +1825,120 @@ async function initWorkTroublesTab() {
  * 绑定工作烦恼按钮
  */
 function bindWorkTroubleButtons() {
-  const buttons = document.querySelectorAll('.btn-work-trouble');
+  const items = document.querySelectorAll('.work-trouble-item');
 
-  buttons.forEach(button => {
-    button.onclick = async () => {
-      const troubleType = button.getAttribute('data-trouble');
-      await handleWorkTroubleClick(troubleType, button);
-    };
+  items.forEach(item => {
+    const troubleType = item.getAttribute('data-trouble');
+    const mainButton = item.querySelector('.btn-work-trouble-main');
+    const minusButton = item.querySelector('.btn-work-trouble-minus');
+
+    // 绑定主按钮（增加）
+    if (mainButton) {
+      mainButton.onclick = async () => {
+        await handleWorkTroubleAdd(troubleType, item);
+      };
+    }
+
+    // 绑定减号按钮（减少）
+    if (minusButton) {
+      minusButton.onclick = async () => {
+        await handleWorkTroubleMinus(troubleType, item);
+      };
+    }
   });
 
-  console.log('✓ Bound', buttons.length, 'work trouble buttons');
+  console.log('✓ Bound', items.length, 'work trouble items');
 }
 
 /**
- * 处理工作烦恼按钮点击
+ * 处理工作烦恼增加
+ */
+async function handleWorkTroubleAdd(troubleType, itemElement) {
+  try {
+    // 记录到数据库
+    const recorded = await recordWorkTrouble(troubleType);
+
+    if (recorded) {
+      // 更新计数显示
+      const countSpan = itemElement.querySelector('.trouble-count');
+      if (countSpan) {
+        const currentCount = parseInt(countSpan.textContent) || 0;
+        countSpan.textContent = currentCount + 1;
+        updateMinusButtonState(itemElement, currentCount + 1);
+      }
+
+      // 添加点击动画效果
+      const mainButton = itemElement.querySelector('.btn-work-trouble-main');
+      if (mainButton) {
+        mainButton.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          mainButton.style.transform = '';
+        }, 150);
+      }
+
+      console.log('✓ Added work trouble:', troubleType);
+    }
+  } catch (error) {
+    console.error('Error recording work trouble:', error);
+    showToast('记录失败，请重试');
+  }
+}
+
+/**
+ * 处理工作烦恼减少
+ */
+async function handleWorkTroubleMinus(troubleType, itemElement) {
+  try {
+    const countSpan = itemElement.querySelector('.trouble-count');
+    const currentCount = parseInt(countSpan?.textContent) || 0;
+
+    if (currentCount === 0) {
+      return; // 已经是0了，不能再减
+    }
+
+    // 从数据库删除最新一条记录
+    const deleted = await deleteLatestWorkTrouble(troubleType);
+
+    if (deleted) {
+      // 更新计数显示
+      if (countSpan) {
+        countSpan.textContent = currentCount - 1;
+        updateMinusButtonState(itemElement, currentCount - 1);
+      }
+
+      // 添加点击动画效果
+      const minusButton = itemElement.querySelector('.btn-work-trouble-minus');
+      if (minusButton) {
+        minusButton.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          minusButton.style.transform = '';
+        }, 150);
+      }
+
+      console.log('✓ Removed work trouble:', troubleType);
+    }
+  } catch (error) {
+    console.error('Error removing work trouble:', error);
+    showToast('删除失败，请重试');
+  }
+}
+
+/**
+ * 更新减号按钮状态
+ */
+function updateMinusButtonState(itemElement, count) {
+  const minusButton = itemElement.querySelector('.btn-work-trouble-minus');
+  if (minusButton) {
+    if (count === 0) {
+      minusButton.disabled = true;
+    } else {
+      minusButton.disabled = false;
+    }
+  }
+}
+
+/**
+ * 处理工作烦恼按钮点击（旧版本，保留兼容）
  */
 async function handleWorkTroubleClick(troubleType, buttonElement) {
   try {
@@ -1875,12 +1975,19 @@ async function loadTodayWorkTroubleStats() {
     const stats = await getTodayWorkTroubles();
     console.log('✓ Today work trouble stats:', stats);
 
-    // 更新所有按钮的计数显示
-    Object.entries(stats).forEach(([troubleType, count]) => {
-      const countSpan = document.querySelector(`[data-count="${troubleType}"]`);
+    // 更新所有按钮的计数显示和减号按钮状态
+    const items = document.querySelectorAll('.work-trouble-item');
+    items.forEach(item => {
+      const troubleType = item.getAttribute('data-trouble');
+      const count = stats[troubleType] || 0;
+      const countSpan = item.querySelector('.trouble-count');
+
       if (countSpan) {
         countSpan.textContent = count;
       }
+
+      // 更新减号按钮状态
+      updateMinusButtonState(item, count);
     });
   } catch (error) {
     console.error('Error loading today work trouble stats:', error);

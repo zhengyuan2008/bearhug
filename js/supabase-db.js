@@ -1478,3 +1478,42 @@ async function getWorkTroubleHistory(days = 7) {
     return [];
   }
 }
+
+/**
+ * 删除最新的一条工作烦恼记录
+ */
+async function deleteLatestWorkTrouble(troubleType) {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    // 先查询最新的一条记录
+    const { data, error: queryError } = await client
+      .from('work_trouble_records')
+      .select('id')
+      .eq('trouble_type', troubleType)
+      .order('recorded_at', { ascending: false })
+      .limit(1);
+
+    if (queryError) throw queryError;
+
+    if (!data || data.length === 0) {
+      console.warn('No record found to delete for:', troubleType);
+      return false;
+    }
+
+    // 删除这条记录
+    const { error: deleteError } = await client
+      .from('work_trouble_records')
+      .delete()
+      .eq('id', data[0].id);
+
+    if (deleteError) throw deleteError;
+
+    console.log('✓ Latest work trouble deleted:', troubleType);
+    return true;
+  } catch (error) {
+    console.error('Error deleting latest work trouble:', error);
+    return false;
+  }
+}

@@ -655,66 +655,102 @@
 
         <!-- 工作烦恼按钮网格 -->
         <section class="work-troubles-buttons glass-mini-card" id="work-troubles-buttons">
-          <button class="btn-work-trouble" data-trouble="会议太多">
-            <span class="trouble-emoji">📅</span>
-            <span class="trouble-text">会议太多</span>
-            <span class="trouble-count" data-count="会议太多">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="想到T就不开心">
-            <span class="trouble-emoji">😤</span>
-            <span class="trouble-text">想到T就不开心</span>
-            <span class="trouble-count" data-count="想到T就不开心">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="都是MQE的错">
-            <span class="trouble-emoji">🔧</span>
-            <span class="trouble-text">都是MQE的错</span>
-            <span class="trouble-count" data-count="都是MQE的错">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="我们为什么不能有好的CE">
-            <span class="trouble-emoji">🤦</span>
-            <span class="trouble-text">为啥不能有好CE</span>
-            <span class="trouble-count" data-count="我们为什么不能有好的CE">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="老板不够重视">
-            <span class="trouble-emoji">👔</span>
-            <span class="trouble-text">老板不够重视</span>
-            <span class="trouble-count" data-count="老板不够重视">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="issue太多看不过来">
-            <span class="trouble-emoji">🐛</span>
-            <span class="trouble-text">issue太多</span>
-            <span class="trouble-count" data-count="issue太多看不过来">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="vendor不给力">
-            <span class="trouble-emoji">🤝</span>
-            <span class="trouble-text">vendor不给力</span>
-            <span class="trouble-count" data-count="vendor不给力">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="我的话没被听到">
-            <span class="trouble-emoji">🔇</span>
-            <span class="trouble-text">我的话没被听到</span>
-            <span class="trouble-count" data-count="我的话没被听到">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="Pack PD煞笔">
-            <span class="trouble-emoji">📦</span>
-            <span class="trouble-text">Pack PD煞笔</span>
-            <span class="trouble-count" data-count="Pack PD煞笔">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="Cell PD脑残">
-            <span class="trouble-emoji">🔋</span>
-            <span class="trouble-text">Cell PD脑残</span>
-            <span class="trouble-count" data-count="Cell PD脑残">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="EPM不懂">
-            <span class="trouble-emoji">📊</span>
-            <span class="trouble-text">EPM不懂</span>
-            <span class="trouble-count" data-count="EPM不懂">0</span>
-          </button>
-          <button class="btn-work-trouble" data-trouble="System过分">
-            <span class="trouble-emoji">⚙️</span>
-            <span class="trouble-text">System过分</span>
-            <span class="trouble-count" data-count="System过分">0</span>
-          </button>
+          <div class="work-trouble-item" data-trouble="会议太多">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">📅</span>
+              <span class="trouble-text">会议太多</span>
+              <span class="trouble-count" data-count="会议太多">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="想到T就不开心">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">😤</span>
+              <span class="trouble-text">想到T就不开心</span>
+              <span class="trouble-count" data-count="想到T就不开心">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="都是MQE的错">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">🔧</span>
+              <span class="trouble-text">都是MQE的错</span>
+              <span class="trouble-count" data-count="都是MQE的错">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="我们为什么不能有好的CE">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">🤦</span>
+              <span class="trouble-text">为啥不能有好CE</span>
+              <span class="trouble-count" data-count="我们为什么不能有好的CE">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="老板不够重视">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">👔</span>
+              <span class="trouble-text">老板不够重视</span>
+              <span class="trouble-count" data-count="老板不够重视">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="issue太多看不过来">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">🐛</span>
+              <span class="trouble-text">issue太多</span>
+              <span class="trouble-count" data-count="issue太多看不过来">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="vendor不给力">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">🤝</span>
+              <span class="trouble-text">vendor不给力</span>
+              <span class="trouble-count" data-count="vendor不给力">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="我的话没被听到">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">🔇</span>
+              <span class="trouble-text">我的话没被听到</span>
+              <span class="trouble-count" data-count="我的话没被听到">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="Pack PD煞笔">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">📦</span>
+              <span class="trouble-text">Pack PD煞笔</span>
+              <span class="trouble-count" data-count="Pack PD煞笔">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="Cell PD脑残">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">🔋</span>
+              <span class="trouble-text">Cell PD脑残</span>
+              <span class="trouble-count" data-count="Cell PD脑残">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="EPM不懂">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">📊</span>
+              <span class="trouble-text">EPM不懂</span>
+              <span class="trouble-count" data-count="EPM不懂">0</span>
+            </button>
+          </div>
+          <div class="work-trouble-item" data-trouble="System过分">
+            <button class="btn-work-trouble-minus">−</button>
+            <button class="btn-work-trouble-main">
+              <span class="trouble-emoji">⚙️</span>
+              <span class="trouble-text">System过分</span>
+              <span class="trouble-count" data-count="System过分">0</span>
+            </button>
+          </div>
         </section>
 
         <!-- 查看历史按钮 -->
@@ -860,7 +896,7 @@
   <!-- JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js?v=5"></script>
-  <script src="js/supabase-db.js?v=6"></script>
+  <script src="js/supabase-db.js?v=7"></script>
   <script src="js/config.js?v=5"></script>
   <script src="js/openai-config.js?v=5"></script>
   <script src="js/main.js?v=7"></script>
