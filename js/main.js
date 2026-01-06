@@ -2322,8 +2322,23 @@ async function loadMindsetArticle() {
       return;
     }
 
-    // 如果数据库中没有今日未读文章，显示错误提示
-    console.warn('⚠️ No unread articles found in database for today');
+    // 如果数据库中没有今日未读文章，尝试重置今日所有文章为未读，然后重新加载
+    console.warn('⚠️ No unread articles found, resetting today\'s articles...');
+    const resetSuccess = await resetTodayMindsetArticles();
+
+    if (resetSuccess) {
+      // 重新加载第一篇文章
+      currentMindsetArticle = await getTodayMindsetArticle();
+      if (currentMindsetArticle) {
+        console.log('✓ Reset successful, showing first article again');
+        displayMindsetArticle(currentMindsetArticle);
+        isMindsetLoading = false;
+        return;
+      }
+    }
+
+    // 如果还是没有文章，显示错误
+    console.warn('⚠️ No articles available in database for today');
     isMindsetLoading = false;
     showMindsetError();
 

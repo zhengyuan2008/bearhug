@@ -876,6 +876,31 @@ async function deleteTodayMindsetArticle() {
   }
 }
 
+/**
+ * 重置今日所有文章为未读状态（循环阅读）
+ */
+async function resetTodayMindsetArticles() {
+  const client = getSupabase();
+  if (!client) return false;
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { error } = await client
+      .from('mindset_articles')
+      .update({ is_read: false })
+      .eq('generation_date', today)
+      .eq('is_read', true);
+
+    if (error) throw error;
+    console.log('✓ Today mindset articles reset to unread');
+    return true;
+  } catch (error) {
+    console.error('Error resetting mindset articles:', error);
+    return false;
+  }
+}
+
 // ========================================
 // 历史上的今天
 // ========================================
