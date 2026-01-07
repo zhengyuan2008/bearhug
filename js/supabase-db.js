@@ -733,34 +733,39 @@ async function getMindsetTopics() {
 }
 
 /**
- * 获取今日未读的心态文章（优先从数据库读取）
+ * 获取随机未读的心态文章（从所有文章中随机选择，不按日期过滤）
  */
 async function getTodayMindsetArticle() {
   const client = getSupabase();
   if (!client) return null;
 
   try {
-    const today = new Date().toISOString().split('T')[0];
-
-    // 查询今日生成且未读、未过期的文章
+    // 查询所有未读、未过期的文章，随机选择一篇
     const { data, error } = await client
       .from('mindset_articles')
       .select(`
         *,
         topic:mindset_topics(*)
       `)
-      .eq('generation_date', today)
       .eq('is_expired', false)
       .eq('is_read', false)
-      .order('display_order', { ascending: true })
-      .limit(1)
-      .single();
+      .limit(100); // 先获取所有未读文章
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
-    console.log('✓ Loaded today unread article:', data ? 'found' : 'not found');
-    return data || null;
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      console.log('✓ No unread articles available');
+      return null;
+    }
+
+    // 在客户端随机选择一篇（Supabase PostgreSQL的random()在RLS下可能有问题）
+    const randomIndex = Math.floor(Math.random() * data.length);
+    const selectedArticle = data[randomIndex];
+
+    console.log(`✓ Randomly selected article: ${selectedArticle.topic?.title || 'Unknown'} (${randomIndex + 1}/${data.length})`);
+    return selectedArticle;
   } catch (error) {
-    console.error('Error loading today mindset article:', error);
+    console.error('Error loading random mindset article:', error);
     return null;
   }
 }
@@ -877,23 +882,22 @@ async function deleteTodayMindsetArticle() {
 }
 
 /**
- * 重置今日所有文章为未读状态（循环阅读）
+ * 重置所有文章为未读状态（循环阅读，不按日期过滤）
  */
 async function resetTodayMindsetArticles() {
   const client = getSupabase();
   if (!client) return false;
 
   try {
-    const today = new Date().toISOString().split('T')[0];
-
+    // 重置所有已读且未过期的文章为未读
     const { error } = await client
       .from('mindset_articles')
       .update({ is_read: false })
-      .eq('generation_date', today)
+      .eq('is_expired', false)
       .eq('is_read', true);
 
     if (error) throw error;
-    console.log('✓ Today mindset articles reset to unread');
+    console.log('✓ All mindset articles reset to unread');
     return true;
   } catch (error) {
     console.error('Error resetting mindset articles:', error);
