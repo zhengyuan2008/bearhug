@@ -2724,7 +2724,8 @@ function updateSnackStats() {
   let monthCount = 0;
 
   snackHistory.forEach(record => {
-    const recordDate = new Date(record.interception_date);
+    // 强制使用本地时区解析日期，避免时区偏移
+    const recordDate = new Date(record.interception_date + 'T00:00:00');
     if (recordDate >= monday) weekCount++;
     if (recordDate >= firstDayOfMonth) monthCount++;
   });
@@ -3126,7 +3127,8 @@ function displayCurrentLetter() {
   // 更新标题和日期
   if (titleEl) titleEl.textContent = letter.title || '给🐻的情书';
   if (dateEl) {
-    const date = new Date(letter.display_date);
+    // 强制使用本地时区解析日期，避免时区偏移导致日期错误
+    const date = new Date(letter.display_date + 'T00:00:00');
     dateEl.textContent = date.toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
